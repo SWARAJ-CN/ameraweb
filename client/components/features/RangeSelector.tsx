@@ -72,23 +72,25 @@ export function RangeSelector({
 
       {custom ? (
         <div className="flex items-center gap-2">
-          <DateInput
-            size="sm"
-            value={customStart}
-            max={customEnd || undefined}
-            onChange={(event) => onCustomStartChange(event.target.value)}
-            aria-label="Start date"
-            className="w-36"
-          />
-          <span className="text-xs text-faint-foreground">to</span>
-          <DateInput
-            size="sm"
-            value={customEnd}
-            min={customStart || undefined}
-            onChange={(event) => onCustomEndChange(event.target.value)}
-            aria-label="End date"
-            className="w-36"
-          />
+          <div className="w-40 shrink-0">
+            <DateInput
+              size="sm"
+              value={customStart}
+              max={customEnd || undefined}
+              onChange={(event) => onCustomStartChange(event.target.value)}
+              aria-label="Start date"
+            />
+          </div>
+          <span className="shrink-0 text-xs text-faint-foreground">to</span>
+          <div className="w-40 shrink-0">
+            <DateInput
+              size="sm"
+              value={customEnd}
+              min={customStart || undefined}
+              onChange={(event) => onCustomEndChange(event.target.value)}
+              aria-label="End date"
+            />
+          </div>
         </div>
       ) : null}
     </div>

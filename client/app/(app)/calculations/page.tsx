@@ -198,7 +198,7 @@ export default function CalculationsPage() {
                   key={key}
                   variant="secondary"
                   onClick={() => append(key)}
-                  className="h-11 text-base font-semibold"
+                  className="h-11 w-full text-base font-semibold"
                   aria-label={`Insert ${key}`}
                 >
                   {key}
@@ -207,7 +207,7 @@ export default function CalculationsPage() {
               <Button
                 variant="secondary"
                 onClick={() => append("(")}
-                className="h-11 text-base font-semibold"
+                className="h-11 w-full text-base font-semibold"
                 aria-label="Open bracket"
               >
                 (
@@ -215,7 +215,7 @@ export default function CalculationsPage() {
               <Button
                 variant="secondary"
                 onClick={() => append(")")}
-                className="h-11 text-base font-semibold"
+                className="h-11 w-full text-base font-semibold"
                 aria-label="Close bracket"
               >
                 )
@@ -223,7 +223,7 @@ export default function CalculationsPage() {
               <Button
                 variant="secondary"
                 onClick={backspace}
-                className="col-span-2 h-11"
+                className="col-span-2 h-11 w-full"
                 aria-label="Backspace"
               >
                 <Delete className="size-4" />

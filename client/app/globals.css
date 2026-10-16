@@ -161,6 +161,19 @@ button,
   outline-offset: 2px;
 }
 
+/*
+ * HeroUI's overlay collections (menus, list boxes) focus the container itself
+ * and style each row individually. The container outline is clipped by the
+ * popover, which leaves a stray accent-coloured line across the top of the
+ * panel — so drop it and keep the per-row affordance.
+ */
+.dropdown__menu:focus-visible,
+.list-box:focus-visible,
+[data-slot="dropdown-menu"]:focus-visible,
+[data-slot="list-box"]:focus-visible {
+  outline: none;
+}
+
 /* ------------------------------------------------------------------ *
  * Utilities
  * ------------------------------------------------------------------ */

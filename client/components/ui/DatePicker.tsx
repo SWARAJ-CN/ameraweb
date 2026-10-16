@@ -72,7 +72,12 @@ export function DateInput({
       <HeroDatePicker.Trigger
         ref={triggerRef}
         id={id}
-        className={cn(size === "sm" && "h-9 px-2.5 text-xs", "gap-2")}
+        className={cn(
+          // HeroUI's trigger defaults to a 28px field; match the height the
+          // Select/Input controls use so filter rows line up.
+          "min-h-9 gap-2 px-3",
+          size === "sm" && "gap-1.5 px-2.5 text-xs"
+        )}
       >
         <HeroDatePicker.TriggerIndicator />
         <span className={cn("truncate text-sm", !date && "text-field-placeholder")}>

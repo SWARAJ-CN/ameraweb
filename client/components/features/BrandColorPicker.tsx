@@ -52,30 +52,48 @@ export function BrandColorPicker({ value, onChange }: BrandColorPickerProps) {
         <ColorPicker value={hex} onChange={applyColor}>
           <ColorPicker.Trigger
             aria-label="Pick a custom colour"
-            className="grid size-10 flex-none place-items-center rounded-lg border border-border-strong bg-surface p-0"
+            className="group relative grid size-10 flex-none place-items-center rounded-lg border border-border-strong bg-surface p-0"
           >
             <span
               className="size-6 rounded-md shadow-sm"
               style={{ backgroundColor: hex }}
             />
-            <Pipette className="pointer-events-none size-3.5 text-foreground/70" />
+            {/* Hover/focus affordance: the pipette floats above the swatch so the
+                trigger keeps its square shape instead of stacking two rows. */}
+            <span className="pointer-events-none absolute inset-0 grid place-items-center rounded-[inherit] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="grid size-5 place-items-center rounded-full border border-border-strong bg-background/90 text-foreground shadow-sm">
+                <Pipette className="size-3" />
+              </span>
+            </span>
           </ColorPicker.Trigger>
-          <ColorPicker.Popover className="flex flex-col gap-3">
-            <ColorArea
-              aria-label="Saturation and brightness"
-              className="w-56"
-              colorSpace="hsb"
-              xChannel="saturation"
-              yChannel="brightness"
-            >
-              <ColorArea.Thumb />
-            </ColorArea>
-            <ColorSlider aria-label="Hue" channel="hue" colorSpace="hsb" className="w-56">
-              <ColorSlider.Track>
-                <ColorSlider.Thumb />
-              </ColorSlider.Track>
-            </ColorSlider>
-            <ColorField aria-label="Primary colour hex value" className="w-56" />
+          <ColorPicker.Popover className="flex w-auto flex-col gap-2.5">
+            {/* The area and the hue slider share a row so the popover stays short
+                enough to fit above the fold (the hex field used to be clipped). */}
+            <div className="flex items-stretch gap-3">
+              <ColorArea
+                aria-label="Saturation and brightness"
+                className="w-44"
+                colorSpace="hsb"
+                xChannel="saturation"
+                yChannel="brightness"
+              >
+                <ColorArea.Thumb />
+              </ColorArea>
+              <ColorSlider
+                aria-label="Hue"
+                channel="hue"
+                colorSpace="hsb"
+                orientation="vertical"
+                className="h-44"
+              >
+                <ColorSlider.Track>
+                  <ColorSlider.Thumb />
+                </ColorSlider.Track>
+              </ColorSlider>
+            </div>
+            <ColorField aria-label="Primary colour hex value" className="w-full">
+              <Input className="h-9 font-mono text-xs uppercase" />
+            </ColorField>
           </ColorPicker.Popover>
         </ColorPicker>
 

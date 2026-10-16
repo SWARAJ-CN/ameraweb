@@ -27,7 +27,25 @@ export function UserMenu() {
         <ChevronDown className="size-3.5 text-muted" />
       </Dropdown.Trigger>
 
-      <Dropdown.Popover placement="bottom end">
+      <Dropdown.Popover placement="bottom end" className="min-w-56">
+        {/*
+          The account summary sits outside `Dropdown.Menu` on purpose: React Aria
+          builds menus through a virtual collection document that has no
+          `createElementNS`, so any SVG rendered *inside* a collection section
+          (the icon in this header) would crash React's SVG creation.
+        */}
+        <div className="flex flex-col gap-0.5 border-b border-border px-3 pb-2.5 pt-1">
+          <p className="truncate text-sm font-semibold text-foreground">{user.username}</p>
+          <p className="flex items-center gap-1 text-[11px] text-muted capitalize">
+            <ShieldCheck className="size-3" />
+            {user.role}
+          </p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted">
+            <User className="size-3.5" />
+            Signed in to Amare admin
+          </p>
+        </div>
+
         <Dropdown.Menu
           onAction={(key) => {
             if (key === "logout") {
@@ -36,19 +54,6 @@ export function UserMenu() {
             }
           }}
         >
-          <Dropdown.Section>
-            <div className="px-2.5 py-2">
-              <p className="truncate text-sm font-semibold text-foreground">{user.username}</p>
-              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted capitalize">
-                <ShieldCheck className="size-3" />
-                {user.role}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 px-2.5 py-2 text-xs text-muted">
-              <User className="size-3.5" />
-              Signed in to Amare admin
-            </div>
-          </Dropdown.Section>
           <Dropdown.Item id="logout" variant="danger">
             <LogOut className="size-4" />
             Sign out
