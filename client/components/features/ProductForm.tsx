@@ -177,7 +177,7 @@ export function ProductForm({
         {error ? (
           <p
             role="alert"
-            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
+            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger-soft-foreground"
           >
             {error}
           </p>

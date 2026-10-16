@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Minus, type LucideIcon } from "lucide-react";
+import { Card, Chip } from "@heroui/react";
 import { cn } from "@/lib/cn";
 import { formatPercent } from "@/lib/format";
 import { Sparkline } from "@/components/charts/Sparkline";
@@ -35,41 +36,42 @@ export function StatCard({
   const TrendIcon = rising ? ArrowUpRight : falling ? ArrowDownRight : Minus;
 
   return (
-    <div className="group relative overflow-clip rounded-2xl border border-border bg-surface p-4 shadow-card">
+    <Card className="relative gap-3 overflow-clip p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            {label}
-          </p>
+          <p className="text-xs font-semibold tracking-wide text-muted uppercase">{label}</p>
           <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{value}</p>
         </div>
         <span
           className="grid size-9 flex-none place-items-center rounded-xl"
-          style={{ backgroundColor: `color-mix(in oklch, ${accent} 14%, transparent)`, color: accent }}
+          style={{
+            backgroundColor: `color-mix(in oklch, ${accent} 14%, transparent)`,
+            color: accent,
+          }}
         >
           <Icon className="size-5" />
         </span>
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           {change !== null ? (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-                good
-                  ? "bg-success-soft text-success"
-                  : "bg-danger-soft text-danger"
-              )}
+            <Chip
+              color={good ? "success" : "danger"}
+              variant="soft"
+              size="sm"
+              className={cn("font-semibold")}
             >
-              <TrendIcon className="size-3.5" />
-              {formatPercent(change)}
-            </span>
+              <Chip.Label className="inline-flex items-center gap-1">
+                <TrendIcon className="size-3.5" />
+                {formatPercent(change)}
+              </Chip.Label>
+            </Chip>
           ) : null}
           {changeLabel ? (
-            <p className="mt-1 text-[11px] text-faint-foreground">{changeLabel}</p>
+            <p className="mt-1 text-[11px] text-muted">{changeLabel}</p>
           ) : hint ? (
-            <p className="mt-1 text-[11px] text-faint-foreground">{hint}</p>
+            <p className="mt-1 text-[11px] text-muted">{hint}</p>
           ) : null}
         </div>
         {spark && spark.length > 1 ? (
@@ -82,6 +84,6 @@ export function StatCard({
           />
         ) : null}
       </div>
-    </div>
+    </Card>
   );
 }

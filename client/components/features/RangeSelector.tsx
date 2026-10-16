@@ -3,6 +3,7 @@
 import { CalendarRange } from "lucide-react";
 import { RANGE_OPTIONS, type RangeKey } from "@/lib/analytics";
 import { cn } from "@/lib/cn";
+import { DateInput } from "@/components/ui/DatePicker";
 
 interface RangeSelectorProps {
   value: RangeKey;
@@ -71,22 +72,22 @@ export function RangeSelector({
 
       {custom ? (
         <div className="flex items-center gap-2">
-          <input
-            type="date"
+          <DateInput
+            size="sm"
             value={customStart}
             max={customEnd || undefined}
             onChange={(event) => onCustomStartChange(event.target.value)}
             aria-label="Start date"
-            className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground transition-colors duration-150 hover:border-border-strong focus:border-brand focus:outline-none"
+            className="w-36"
           />
           <span className="text-xs text-faint-foreground">to</span>
-          <input
-            type="date"
+          <DateInput
+            size="sm"
             value={customEnd}
             min={customStart || undefined}
             onChange={(event) => onCustomEndChange(event.target.value)}
             aria-label="End date"
-            className="h-9 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground transition-colors duration-150 hover:border-border-strong focus:border-brand focus:outline-none"
+            className="w-36"
           />
         </div>
       ) : null}

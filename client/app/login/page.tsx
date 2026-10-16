@@ -141,7 +141,7 @@ export default function LoginPage() {
           <div
             role="group"
             aria-label="Authentication mode"
-            className="mt-6 grid grid-cols-2 gap-1 rounded-xl border border-border bg-surface-muted p-1"
+            className="mt-6 grid grid-cols-2 gap-1 rounded-field bg-segment p-1 shadow-field"
           >
             {(["login", "register"] as Mode[]).map((option) => (
               <button
@@ -152,10 +152,10 @@ export default function LoginPage() {
                   setMode(option);
                   setError(null);
                 }}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-150 ${
+                className={`rounded-[calc(var(--radius-field)-3px)] px-3 py-2 text-sm font-semibold transition-all duration-200 ${
                   mode === option
-                    ? "bg-surface text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-surface text-foreground shadow-field"
+                    : "text-segment-foreground hover:text-foreground"
                 }`}
               >
                 {option === "login" ? "Sign in" : "Register"}
@@ -197,7 +197,7 @@ export default function LoginPage() {
             {error ? (
               <p
                 role="alert"
-                className="rounded-lg border border-transparent bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
+                className="rounded-lg border border-transparent bg-danger-soft px-3 py-2 text-xs font-medium text-danger-soft-foreground"
               >
                 {error}
               </p>

@@ -1,15 +1,12 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { Card as HeroCard } from "@heroui/react";
 import { cn } from "@/lib/cn";
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn(
-        "rounded-2xl border border-border bg-surface shadow-card",
-        className
-      )}
-      {...props}
-    />
+    <HeroCard className={cn("gap-0 p-0", className)} {...props}>
+      {children ?? null}
+    </HeroCard>
   );
 }
 
@@ -28,9 +25,9 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div
+    <HeroCard.Header
       className={cn(
-        "flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4",
+        "flex-row items-start justify-between gap-3 border-b border-separator px-5 py-4",
         className
       )}
       {...props}
@@ -38,15 +35,19 @@ export function CardHeader({
       {children ?? (
         <div className="min-w-0">
           {title ? (
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            <HeroCard.Title className="text-sm font-semibold text-foreground">
+              {title}
+            </HeroCard.Title>
           ) : null}
           {description ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+            <HeroCard.Description className="mt-0.5 text-xs text-muted">
+              {description}
+            </HeroCard.Description>
           ) : null}
         </div>
       )}
       {actions ? <div className="flex flex-none items-center gap-2">{actions}</div> : null}
-    </div>
+    </HeroCard.Header>
   );
 }
 
@@ -58,7 +59,7 @@ export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5",
+        "flex flex-wrap items-center justify-between gap-3 border-t border-separator px-5 py-3.5",
         className
       )}
       {...props}

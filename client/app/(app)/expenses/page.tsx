@@ -11,7 +11,8 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
 import { PageHeader, Pagination, SearchInput } from "@/components/ui/Controls";
-import { Field, Input, Select } from "@/components/ui/Input";
+import { Field, Select } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DatePicker";
 import { TBody, TD, TH, THead, TR, Table, TableWrapper } from "@/components/ui/Table";
 import { downloadCsv } from "@/lib/csv";
 import { formatCurrency, formatDate, formatNumber, parseDateInput } from "@/lib/format";
@@ -199,9 +200,8 @@ export default function ExpensesPage() {
             </Select>
           </Field>
           <Field label="From" htmlFor="expenses-from" className="w-40">
-            <Input
+            <DateInput
               id="expenses-from"
-              type="date"
               value={from}
               max={to || undefined}
               onChange={(event) => {
@@ -211,9 +211,8 @@ export default function ExpensesPage() {
             />
           </Field>
           <Field label="To" htmlFor="expenses-to" className="w-40">
-            <Input
+            <DateInput
               id="expenses-to"
-              type="date"
               value={to}
               min={from || undefined}
               onChange={(event) => {
@@ -301,20 +300,21 @@ export default function ExpensesPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 Rows
-                <select
-                  value={pageSize}
+                <Select
+                  aria-label="Rows per page"
+                  className="w-20"
+                  value={String(pageSize)}
                   onChange={(event) => {
                     setPageSize(Number(event.target.value));
                     resetPage();
                   }}
-                  className="h-8 cursor-pointer rounded-lg border border-border bg-surface px-2 text-xs text-foreground"
                 >
                   {PAGE_SIZES.map((size) => (
                     <option key={size} value={size}>
                       {size}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <Pagination
                 page={currentPage}

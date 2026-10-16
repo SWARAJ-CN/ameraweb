@@ -25,17 +25,17 @@ export function Table({ className, ...props }: TableHTMLAttributes<HTMLTableElem
 }
 
 export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn("bg-surface-muted/70", className)} {...props} />;
+  return <thead className={cn("bg-surface-secondary/70", className)} {...props} />;
 }
 
 export function TBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn("divide-y divide-border", className)} {...props} />;
+  return <tbody className={cn("divide-y divide-separator", className)} {...props} />;
 }
 
 export function TR({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={cn("transition-colors duration-150 hover:bg-surface-muted/60", className)}
+      className={cn("transition-colors duration-150 hover:bg-surface-secondary/60", className)}
       {...props}
     />
   );
@@ -46,7 +46,7 @@ export function TH({ className, ...props }: ThHTMLAttributes<HTMLTableCellElemen
     <th
       scope="col"
       className={cn(
-        "whitespace-nowrap px-4 py-3 text-start text-xs font-semibold tracking-wide text-muted-foreground uppercase",
+        "whitespace-nowrap px-4 py-3 text-start text-xs font-semibold tracking-wide text-muted uppercase",
         className
       )}
       {...props}

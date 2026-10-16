@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DatePicker";
 import { EXPENSE_TYPES, PAYMENT_METHODS, type Expense } from "@/lib/types";
 import type { ExpenseDraft } from "@/lib/normalize";
 import { parseDateInput, toDateInputValue } from "@/lib/format";
@@ -101,9 +102,8 @@ export function ExpenseForm({
             </Select>
           </Field>
           <Field label="Date" htmlFor="expense-date">
-            <Input
+            <DateInput
               id="expense-date"
-              type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
             />
@@ -167,7 +167,7 @@ export function ExpenseForm({
         {error ? (
           <p
             role="alert"
-            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
+            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger-soft-foreground"
           >
             {error}
           </p>

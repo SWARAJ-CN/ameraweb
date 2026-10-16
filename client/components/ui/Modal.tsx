@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
-import { X } from "lucide-react";
-import { cn } from "@/lib/cn";
+import type { ReactNode } from "react";
+import { Modal as HeroModal } from "@heroui/react";
 
 type Size = "sm" | "md" | "lg" | "xl";
 
 const WIDTHS: Record<Size, string> = {
-  sm: "26rem",
-  md: "34rem",
-  lg: "46rem",
-  xl: "64rem",
+  sm: "max-w-[26rem]",
+  md: "max-w-[34rem]",
+  lg: "max-w-[46rem]",
+  xl: "max-w-[64rem]",
 };
 
 interface ModalProps {
@@ -32,56 +31,40 @@ export function Modal({
   size = "md",
   children,
 }: ModalProps) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      onClick={(event) => {
-        if (event.target === ref.current) onClose();
+    <HeroModal.Root
+      isOpen={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
       }}
-      style={{ width: `min(calc(100% - 2rem), ${WIDTHS[size]})` }}
-      className={cn(
-        "max-h-[min(90dvh,56rem)] overflow-hidden rounded-2xl border border-border bg-surface p-0 text-foreground shadow-pop",
-        "backdrop:bg-black/50 backdrop:backdrop-blur-[2px]"
-      )}
     >
-      <div className="flex max-h-[min(90dvh,56rem)] flex-col">
-        <header className="flex flex-none items-start justify-between gap-4 border-b border-border px-5 py-4">
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold text-foreground">{title}</h2>
-            {description ? (
-              <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="relative -m-1.5 flex-none rounded-lg p-1.5 text-faint-foreground transition-colors duration-150 hover:bg-surface-muted hover:text-foreground"
-          >
-            <X className="size-5" />
-          </button>
-        </header>
+      {/*
+        React Aria's DialogTrigger expects a pressable trigger. This modal is
+        driven entirely from outside, so an inert one keeps the overlay's press
+        wiring (and its enter/exit animation) intact without rendering any UI.
+      */}
+      <HeroModal.Trigger aria-hidden className="hidden" tabIndex={-1} />
+      <HeroModal.Backdrop isDismissable variant="blur">
+        <HeroModal.Container placement="center" size="md" scroll="inside">
+          <HeroModal.Dialog className={WIDTHS[size]}>
+            <HeroModal.Header>
+              <div className="min-w-0">
+                <HeroModal.Heading className="text-base font-semibold text-foreground">
+                  {title}
+                </HeroModal.Heading>
+                {description ? (
+                  <p className="mt-0.5 text-xs text-muted">{description}</p>
+                ) : null}
+              </div>
+              <HeroModal.CloseTrigger />
+            </HeroModal.Header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
-          {children}
-        </div>
+            <HeroModal.Body>{children}</HeroModal.Body>
 
-        {footer ? (
-          <footer className="flex flex-none flex-wrap items-center justify-end gap-2 border-t border-border bg-surface-muted/60 px-5 py-3.5">
-            {footer}
-          </footer>
-        ) : null}
-      </div>
-    </dialog>
+            {footer ? <HeroModal.Footer>{footer}</HeroModal.Footer> : null}
+          </HeroModal.Dialog>
+        </HeroModal.Container>
+      </HeroModal.Backdrop>
+    </HeroModal.Root>
   );
 }

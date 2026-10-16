@@ -226,7 +226,7 @@ export default function DatabasePage() {
                       className={
                         "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-start text-sm transition-colors duration-150 " +
                         (selected
-                          ? "bg-brand-soft font-semibold text-brand"
+                          ? "bg-accent-soft font-semibold text-accent-soft-foreground"
                           : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")
                       }
                     >

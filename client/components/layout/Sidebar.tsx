@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { NAV_GROUPS } from "./nav-config";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { relativeTime } from "@/lib/format";
 import { useData } from "@/components/providers/DataProvider";
@@ -65,16 +66,16 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                         onClick={onNavigate}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors duration-150",
+                          "group relative flex items-center gap-2.5 rounded-field px-2.5 py-2 text-sm font-medium transition-colors duration-150",
                           active
-                            ? "bg-brand-soft text-brand"
-                            : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                            ? "bg-accent-soft text-accent-soft-foreground"
+                            : "text-muted hover:bg-surface-secondary hover:text-foreground"
                         )}
                       >
                         <Icon className="size-4 flex-none" />
                         <span className="truncate">{item.label}</span>
                         {active ? (
-                          <span className="absolute inset-y-1.5 -start-3 w-1 rounded-full bg-brand" />
+                          <span className="absolute inset-y-1.5 -start-3 w-1 rounded-full bg-accent" />
                         ) : null}
                       </Link>
                     </li>
@@ -87,11 +88,12 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       </nav>
 
       <div className="border-t border-border px-3 py-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => void refresh({ silent: true })}
           disabled={refreshing}
-          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-xs text-muted-foreground transition-colors duration-150 hover:bg-surface-muted hover:text-foreground disabled:opacity-60"
+          className="w-full justify-start gap-2 px-2.5 text-xs font-normal text-muted-foreground"
         >
           <RefreshCw className={cn("size-3.5 flex-none", refreshing && "animate-spin")} />
           <span className="truncate">
@@ -101,7 +103,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                 ? `Synced ${relativeTime(lastSyncedAt)}`
                 : "Sync now"}
           </span>
-        </button>
+        </Button>
       </div>
     </aside>
   );

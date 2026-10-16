@@ -1,8 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { CloseButton } from "@heroui/react";
 import { cn } from "@/lib/cn";
 import { Button } from "./Button";
+import { Input } from "./Input";
 
 interface Option {
   value: string;
@@ -29,7 +31,7 @@ export function SegmentedControl({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex flex-none items-center gap-0.5 rounded-xl border border-border bg-surface-muted p-0.5",
+        "inline-flex flex-none items-center gap-0.5 rounded-field bg-segment p-0.5 shadow-field",
         className
       )}
     >
@@ -42,10 +44,10 @@ export function SegmentedControl({
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors duration-150",
+              "rounded-[calc(var(--radius-field)-3px)] px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200",
               selected
-                ? "bg-surface text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-surface text-foreground shadow-field"
+                : "text-segment-foreground hover:text-foreground"
             )}
           >
             {option.label}
@@ -71,23 +73,20 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div className={cn("relative", className)}>
-      <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint-foreground" />
-      <input
+      <Search className="pointer-events-none absolute start-3 top-1/2 z-10 size-4 -translate-y-1/2 text-faint-foreground" />
+      <Input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-10 w-full rounded-lg border border-border bg-surface ps-9 pe-9 text-sm text-foreground placeholder:text-faint-foreground transition-colors duration-150 hover:border-border-strong focus:border-brand focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand"
+        className="ps-9 pe-9"
       />
       {value ? (
-        <button
-          type="button"
-          onClick={() => onChange("")}
+        <CloseButton
           aria-label="Clear search"
-          className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-faint-foreground transition-colors duration-150 hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
+          className="absolute end-1.5 top-1/2 -translate-y-1/2"
+          onPress={() => onChange("")}
+        />
       ) : null}
     </div>
   );
@@ -127,7 +126,7 @@ export function Pagination({
         className
       )}
     >
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted">
         Showing <span className="font-semibold tabular-nums text-foreground">{from}</span>–
         <span className="font-semibold tabular-nums text-foreground">{to}</span> of{" "}
         <span className="font-semibold tabular-nums text-foreground">{total}</span>
@@ -149,10 +148,10 @@ export function Pagination({
             onClick={() => onChange(value)}
             aria-current={value === page ? "page" : undefined}
             className={cn(
-              "h-8 min-w-8 rounded-lg px-2 text-xs font-semibold tabular-nums transition-colors duration-150",
+              "h-8 min-w-8 rounded-field px-2 text-xs font-semibold tabular-nums transition-colors duration-150",
               value === page
-                ? "bg-brand text-brand-foreground"
-                : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted hover:bg-surface-secondary hover:text-foreground"
             )}
           >
             {value}

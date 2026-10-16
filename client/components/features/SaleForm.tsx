@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { Disclosure } from "@heroui/react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Input";
-import { cn } from "@/lib/cn";
+import { DateInput } from "@/components/ui/DatePicker";
 import { computeSaleTotals, type SaleDraft } from "@/lib/normalize";
 import { formatCurrency, parseDateInput, toDateInputValue } from "@/lib/format";
 import {
@@ -141,9 +142,8 @@ export function SaleForm({
             />
           </Field>
           <Field label="Sale date" htmlFor="sale-date">
-            <Input
+            <DateInput
               id="sale-date"
-              type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
             />
@@ -181,23 +181,19 @@ export function SaleForm({
           />
         </Field>
 
-        <div className="rounded-xl border border-border">
-          <button
-            type="button"
-            onClick={() => setShowAddress((current) => !current)}
-            aria-expanded={showAddress}
-            className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start text-sm font-semibold text-foreground"
-          >
-            Customer address
-            <ChevronDown
-              className={cn(
-                "size-4 text-faint-foreground transition-transform duration-200",
-                showAddress && "rotate-180"
-              )}
-            />
-          </button>
-          {showAddress ? (
-            <div className="grid gap-4 border-t border-border p-4 sm:grid-cols-2">
+        <Disclosure
+          className="rounded-xl border border-border"
+          isExpanded={showAddress}
+          onExpandedChange={setShowAddress}
+        >
+          <Disclosure.Heading>
+            <Disclosure.Trigger className="flex w-full items-center justify-between gap-2 rounded-none border-0 bg-transparent px-4 py-3 text-start text-sm font-semibold text-foreground">
+              Customer address
+              <Disclosure.Indicator />
+            </Disclosure.Trigger>
+          </Disclosure.Heading>
+          <Disclosure.Content>
+            <Disclosure.Body className="grid gap-4 border-t border-border p-4 sm:grid-cols-2">
               <Field label="Phone" htmlFor="addr-phone">
                 <Input
                   id="addr-phone"
@@ -259,9 +255,9 @@ export function SaleForm({
                   onChange={(event) => setAddress({ ...address, country: event.target.value })}
                 />
               </Field>
-            </div>
-          ) : null}
-        </div>
+            </Disclosure.Body>
+          </Disclosure.Content>
+        </Disclosure>
 
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -416,7 +412,7 @@ export function SaleForm({
         {error ? (
           <p
             role="alert"
-            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger"
+            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-medium text-danger-soft-foreground"
           >
             {error}
           </p>

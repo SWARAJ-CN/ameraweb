@@ -5,10 +5,15 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+
+/** Layout effect on the client, plain effect during SSR (avoids React's warning). */
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export type ThemeMode = "light" | "dark" | "system";
 
@@ -34,11 +39,13 @@ function readStored(): ThemeMode {
   return "system";
 }
 
-/** The DOM attribute the pre-paint script and this provider keep in sync. */
-function apply(mode: ThemeMode) {
+/** The DOM attributes the pre-paint script and this provider keep in sync. */
+function apply(mode: ThemeMode, scheme: "light" | "dark") {
   const root = document.documentElement;
-  if (mode === "system") root.removeAttribute("data-theme");
-  else root.dataset.theme = mode;
+  const resolved = mode === "system" ? scheme : mode;
+  root.dataset.theme = resolved;
+  root.classList.add(resolved);
+  root.classList.remove(resolved === "dark" ? "light" : "dark");
 }
 
 function subscribe(onChange: () => void) {
@@ -67,9 +74,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [mode, scheme] = snapshot.split("|") as [ThemeMode, "light" | "dark"];
 
-  useEffect(() => {
-    apply(mode);
-  }, [mode]);
+  useIsomorphicLayoutEffect(() => {
+    apply(mode, scheme);
+  }, [mode, scheme]);
 
   const setMode = useCallback((next: ThemeMode) => {
     try {

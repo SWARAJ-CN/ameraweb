@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { InlineScript } from "@/components/InlineScript";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
@@ -36,23 +37,31 @@ export const viewport: Viewport = {
 };
 
 // Applies the saved theme and brand colour before first paint so the page
-// never flashes the defaults.
+// never flashes the defaults. HeroUI switches on `data-theme`/`class`, so
+// "system" is resolved to a concrete scheme here.
 const themeScript = `(function(){try{
 var t=localStorage.getItem('amare.theme');
-if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}
-var b=localStorage.getItem('amare.brand.vars');
-if(b){var v=JSON.parse(b);for(var k in v){if(Object.prototype.hasOwnProperty.call(v,k)){document.documentElement.style.setProperty(k,v[k]);}}}
+var m=(t==='light'||t==='dark')?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+var r=document.documentElement;
+r.dataset.theme=m;
+r.classList.add(m);
+r.classList.remove(m==='dark'?'light':'dark');
+var b=localStorage.getItem('amare.brand.vars.v2');
+if(b){var v=JSON.parse(b);for(var k in v){if(Object.prototype.hasOwnProperty.call(v,k)){r.style.setProperty(k,v[k]);}}}
 }catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      data-theme="light"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      <head>
+        <InlineScript html={themeScript} />
+      </head>
+      <body className="min-h-full bg-background text-foreground">
         <ThemeProvider>
           <ToastProvider>
             <AuthProvider>{children}</AuthProvider>

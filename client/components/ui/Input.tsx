@@ -1,54 +1,134 @@
-import type {
-  InputHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
-  TextareaHTMLAttributes,
+import {
+  Children,
+  createContext,
+  isValidElement,
+  useContext,
+  useMemo,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type TextareaHTMLAttributes,
 } from "react";
+import {
+  Input as HeroInput,
+  ListBox,
+  Select as HeroSelect,
+  TextArea as HeroTextArea,
+} from "@heroui/react";
 import { cn } from "@/lib/cn";
 
-const CONTROL =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground " +
-  "placeholder:text-faint-foreground transition-colors duration-150 " +
-  "hover:border-border-strong focus:border-brand focus:outline-none " +
-  "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
+/**
+ * Carries the visible `Field` label down to controls that need to describe
+ * themselves to assistive tech (React Aria's hidden native controls).
+ */
+const FieldLabelContext = createContext<string | undefined>(undefined);
+
+export { FieldLabelContext };
+
+interface SelectOption {
+  value: string;
+  label: ReactNode;
+  /** Plain-text form of the label, for the placeholder. */
+  text: string;
+  disabled?: boolean;
+}
+
+/** Reads the plain `<option>` children the rest of the app already passes in. */
+function parseOptions(children: ReactNode): SelectOption[] {
+  const options: SelectOption[] = [];
+  Children.forEach(children, (child) => {
+    if (!isValidElement(child)) return;
+    const props = child.props as {
+      value?: unknown;
+      children?: ReactNode;
+      disabled?: boolean;
+    };
+    const label = props.children;
+    options.push({
+      value: String(props.value ?? ""),
+      label,
+      text: typeof label === "string" || typeof label === "number" ? String(label) : "",
+      disabled: props.disabled,
+    });
+  });
+  return options;
+}
+
+interface SelectChangeEvent {
+  target: { value: string };
+}
+
+interface SelectProps {
+  id?: string;
+  value?: string;
+  onChange?: (event: SelectChangeEvent) => void;
+  disabled?: boolean;
+  required?: boolean;
+  placeholder?: string;
+  className?: string;
+  "aria-label"?: string;
+  children: ReactNode;
+}
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(CONTROL, "h-10", className)} {...props} />;
+  return <HeroInput className={className} {...props} />;
 }
 
 export function Textarea({
   className,
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      className={cn(CONTROL, "min-h-20 resize-y leading-relaxed", className)}
-      {...props}
-    />
-  );
+  return <HeroTextArea className={cn("min-h-20 resize-y", className)} {...props} />;
 }
 
 export function Select({
   className,
   children,
+  value,
+  onChange,
+  placeholder,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement>) {
+}: SelectProps) {
+  const options = useMemo(() => parseOptions(children), [children]);
+  const placeholderOption = options.find((option) => option.value === "");
+  const items = options.filter((option) => option.value !== "");
+  const selected = value === undefined || value === null || value === "" ? null : String(value);
+  const fieldLabel = useContext(FieldLabelContext);
+  const ariaLabel = props["aria-label"] ?? fieldLabel ?? placeholder ?? placeholderOption?.text;
+
   return (
-    <select
-      className={cn(
-        CONTROL,
-        "h-10 cursor-pointer appearance-none bg-[length:1rem] bg-[right_0.65rem_center] bg-no-repeat pe-9",
-        className
-      )}
-      style={{
-        backgroundImage:
-          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
-      }}
-      {...props}
+    <HeroSelect
+      aria-label={ariaLabel}
+      className={cn("w-full", className)}
+      fullWidth
+      isDisabled={props.disabled}
+      isRequired={props.required}
+      placeholder={placeholder ?? placeholderOption?.text ?? "Select…"}
+      selectedKey={selected}
+      onSelectionChange={(key) =>
+        onChange?.({
+          target: { value: key === null ? "" : String(key) },
+        } as SelectChangeEvent)
+      }
     >
-      {children}
-    </select>
+      <HeroSelect.Trigger id={props.id} aria-label={ariaLabel}>
+        <HeroSelect.Value />
+        <HeroSelect.Indicator />
+      </HeroSelect.Trigger>
+      <HeroSelect.Popover>
+        <ListBox>
+          {items.map((option) => (
+            <ListBox.Item
+              key={option.value}
+              id={option.value}
+              isDisabled={option.disabled}
+              textValue={option.text || String(option.label)}
+            >
+              {option.label}
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </HeroSelect.Popover>
+    </HeroSelect>
   );
 }
 
@@ -72,20 +152,22 @@ export function Field({
   children,
 }: FieldProps) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <label
-        htmlFor={htmlFor}
-        className="flex items-center gap-1 text-xs font-semibold text-muted-foreground"
-      >
-        {label}
-        {required ? <span className="text-danger">*</span> : null}
-      </label>
-      {children}
-      {error ? (
-        <p className="text-xs font-medium text-danger">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-faint-foreground">{hint}</p>
-      ) : null}
-    </div>
+    <FieldLabelContext.Provider value={typeof label === "string" ? label : undefined}>
+      <div className={cn("flex flex-col gap-1.5", className)}>
+        <label
+          htmlFor={htmlFor}
+          className="flex items-center gap-1 text-xs font-semibold text-muted"
+        >
+          {label}
+          {required ? <span className="text-danger">*</span> : null}
+        </label>
+        {children}
+        {error ? (
+          <p className="text-xs font-medium text-danger">{error}</p>
+        ) : hint ? (
+          <p className="text-xs text-muted">{hint}</p>
+        ) : null}
+      </div>
+    </FieldLabelContext.Provider>
   );
 }

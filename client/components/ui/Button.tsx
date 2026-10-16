@@ -1,74 +1,93 @@
 "use client";
 
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import type { LinkProps } from "next/link";
 import { Loader2 } from "lucide-react";
+import { Button as HeroButton, buttonVariants, type ButtonProps as HeroButtonProps } from "@heroui/react";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg" | "icon";
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+export type ButtonSize = "sm" | "md" | "lg" | "icon";
 
-const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-brand text-brand-foreground shadow-sm hover:bg-brand-hover active:bg-brand-active focus-visible:outline-brand-foreground",
-  secondary:
-    "border border-border bg-surface-muted text-foreground hover:bg-surface-hover active:bg-surface-inset",
-  outline:
-    "border border-border-strong bg-surface text-foreground hover:bg-surface-muted active:bg-surface-inset",
-  ghost:
-    "text-muted-foreground hover:bg-surface-muted hover:text-foreground active:bg-surface-inset",
-  danger:
-    "bg-danger text-white shadow-sm hover:brightness-95 active:brightness-90 focus-visible:outline-white",
+const HERO_VARIANT: Record<
+  ButtonVariant,
+  "primary" | "secondary" | "outline" | "ghost" | "danger"
+> = {
+  primary: "primary",
+  secondary: "secondary",
+  outline: "outline",
+  ghost: "ghost",
+  danger: "danger",
 };
 
-const SIZES: Record<Size, string> = {
-  sm: "h-8 gap-1.5 px-3 text-xs",
-  md: "h-10 gap-2 px-4 text-sm",
-  lg: "h-11 gap-2 px-5 text-sm",
-  icon: "size-10",
+const HERO_SIZE: Record<ButtonSize, "sm" | "md" | "lg"> = {
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  icon: "md",
 };
 
 /** Shared classes so links and buttons look identical. */
-export function buttonClasses(variant: Variant = "primary", size: Size = "md", className?: string) {
+export function buttonClasses(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  className?: string
+) {
   return cn(
-    "inline-flex flex-none items-center justify-center rounded-lg font-semibold whitespace-nowrap",
-    "transition-colors duration-150 motion-safe:transition-transform active:scale-[0.98]",
-    "disabled:pointer-events-none disabled:opacity-55",
-    VARIANTS[variant],
-    SIZES[size],
+    buttonVariants({
+      variant: HERO_VARIANT[variant],
+      size: HERO_SIZE[size],
+      isIconOnly: size === "icon",
+    }),
     className
   );
 }
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
-  size?: Size;
+export interface ButtonProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color" | "onClick"> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
+  onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { className, variant = "primary", size = "md", loading = false, disabled, children, ...props },
+  {
+    className,
+    variant = "primary",
+    size = "md",
+    loading = false,
+    disabled,
+    children,
+    onClick,
+    ...props
+  },
   ref
 ) {
   return (
-    <button
+    <HeroButton
       ref={ref}
-      disabled={disabled || loading}
-      className={buttonClasses(variant, size, className)}
-      {...props}
+      variant={HERO_VARIANT[variant]}
+      size={HERO_SIZE[size]}
+      isIconOnly={size === "icon"}
+      isDisabled={disabled || loading}
+      isPending={loading}
+      onPress={onClick ? (event) => onClick(event as unknown as MouseEvent<HTMLButtonElement>) : undefined}
+      className={className}
+      {...(props as unknown as HeroButtonProps)}
     >
-      {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+      {loading ? <Loader2 aria-hidden className="size-4 animate-spin" /> : null}
       {children}
-    </button>
+    </HeroButton>
   );
 });
 
-export interface ButtonLinkProps extends LinkProps {
-  variant?: Variant;
-  size?: Size;
+export interface ButtonLinkProps extends Omit<LinkProps, "className"> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function ButtonLink({

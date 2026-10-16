@@ -1,86 +1,74 @@
+@layer theme, base, components, utilities;
+
 @import "tailwindcss";
+@import "@heroui/styles";
 
 /* ------------------------------------------------------------------ *
- * Reset
+ * App token bridge
+ *
+ * HeroUI ships the semantic palette (background, surface, foreground,
+ * accent, default, success/warning/danger, field tokens …). The admin was
+ * written against a slightly different set of names, so we alias the
+ * leftovers onto HeroUI tokens instead of touching every className.
  * ------------------------------------------------------------------ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  min-width: 0;
+@theme inline {
+  /* Surfaces */
+  --color-surface-muted: var(--surface-secondary);
+  --color-surface-inset: var(--surface-secondary);
+  --color-surface-strong: var(--surface-tertiary);
+
+  /* Text */
+  --color-muted-foreground: var(--muted);
+  --color-faint-foreground: color-mix(in oklab, var(--muted) 74%, transparent);
+
+  /* Borders */
+  --color-border-strong: var(--border-tertiary);
+
+  /* Brand == HeroUI accent */
+  --color-brand: var(--accent);
+  --color-brand-hover: var(--accent-hover);
+  --color-brand-active: color-mix(in oklab, var(--accent) 85%, var(--accent-foreground) 15%);
+  --color-brand-foreground: var(--accent-foreground);
+  --color-brand-soft: var(--accent-soft);
+  --color-brand-soft-foreground: var(--accent-soft-foreground);
+
+  /* Soft status text that stays readable on soft backgrounds */
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-foreground: var(--warning-soft-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-foreground: var(--danger-soft-foreground);
+
+  /* Info (HeroUI has no info hue) */
+  --color-info: light-dark(oklch(0.55 0.16 255), oklch(0.71 0.14 255));
+  --color-info-soft: color-mix(in oklab, var(--color-info) 15%, transparent);
+  --color-info-soft-foreground: color-mix(in oklab, var(--color-info) 72%, var(--foreground) 28%);
+
+  /* Charts — fixed across themes so series keep their identity */
+  --color-chart-1: oklch(0.64 0.2 6);
+  --color-chart-2: oklch(0.62 0.15 255);
+  --color-chart-3: oklch(0.75 0.15 75);
+  --color-chart-4: oklch(0.66 0.14 158);
+  --color-chart-5: oklch(0.62 0.17 300);
+  --color-chart-6: oklch(0.7 0.12 205);
+  --color-chart-7: oklch(0.66 0.17 340);
+  --color-chart-8: oklch(0.7 0.13 130);
 }
 
 :root {
-  interpolate-size: allow-keywords;
-  scrollbar-gutter: stable;
-  text-wrap: pretty;
-  overflow-wrap: break-word;
-  font-synthesis: none;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
+  /* Slightly softer corners than HeroUI's default */
+  --radius: 0.75rem;
 
-  /* Motion */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Raw tokens referenced directly by charts and inline styles */
+  --brand: var(--accent);
+  --brand-hover: var(--accent-hover);
+  --brand-foreground: var(--accent-foreground);
+  --brand-soft: var(--accent-soft);
+  --surface-muted: var(--surface-secondary);
+  --border-strong: var(--border-tertiary);
+  --faint-foreground: color-mix(in oklab, var(--muted) 74%, transparent);
 
-  /* One token set for light and dark. The theme is switched by changing
-     `color-scheme`, never by redefining these values. */
-  color-scheme: light dark;
-
-  /* Surfaces */
-  --background: light-dark(oklch(0.984 0.005 340), oklch(0.16 0.012 320));
-  --surface: light-dark(oklch(1 0 none), oklch(0.205 0.014 320));
-  --surface-muted: light-dark(oklch(0.969 0.007 340), oklch(0.246 0.016 320));
-  --surface-hover: light-dark(oklch(0.952 0.009 340), oklch(0.278 0.018 320));
-  --surface-inset: light-dark(oklch(0.978 0.006 340), oklch(0.185 0.014 320));
-
-  --border: light-dark(oklch(0.912 0.009 340), oklch(0.312 0.016 320));
-  --border-strong: light-dark(oklch(0.858 0.012 340), oklch(0.382 0.018 320));
-
-  /* Text */
-  --foreground: light-dark(oklch(0.215 0.021 320), oklch(0.965 0.005 340));
-  --muted-foreground: light-dark(oklch(0.53 0.021 320), oklch(0.725 0.014 340));
-  --faint-foreground: light-dark(oklch(0.65 0.017 320), oklch(0.6 0.013 340));
-
-  /* Brand — Amare rose */
-  --brand: light-dark(oklch(0.585 0.201 6), oklch(0.705 0.174 6));
-  --brand-hover: light-dark(oklch(0.53 0.201 6), oklch(0.755 0.164 6));
-  --brand-active: light-dark(oklch(0.48 0.19 6), oklch(0.79 0.15 6));
-  --brand-foreground: oklch(0.995 0.008 6);
-  --brand-soft: light-dark(
-    oklch(0.585 0.201 6 / 0.1),
-    oklch(0.705 0.174 6 / 0.16)
-  );
-  --brand-ring: light-dark(
-    oklch(0.585 0.201 6 / 0.35),
-    oklch(0.705 0.174 6 / 0.45)
-  );
-
-  /* Status */
-  --success: light-dark(oklch(0.58 0.145 158), oklch(0.72 0.15 158));
-  --success-soft: light-dark(
-    oklch(0.58 0.145 158 / 0.12),
-    oklch(0.72 0.15 158 / 0.18)
-  );
-  --warning: light-dark(oklch(0.66 0.15 68), oklch(0.8 0.15 78));
-  --warning-soft: light-dark(
-    oklch(0.66 0.15 68 / 0.14),
-    oklch(0.8 0.15 78 / 0.18)
-  );
-  --danger: light-dark(oklch(0.56 0.213 27), oklch(0.69 0.19 27));
-  --danger-soft: light-dark(
-    oklch(0.56 0.213 27 / 0.12),
-    oklch(0.69 0.19 27 / 0.18)
-  );
-  --info: light-dark(oklch(0.55 0.16 255), oklch(0.71 0.14 255));
-  --info-soft: light-dark(
-    oklch(0.55 0.16 255 / 0.12),
-    oklch(0.71 0.14 255 / 0.18)
-  );
-
-  /* Chart palette (fixed across themes so series keep their identity) */
   --chart-1: oklch(0.64 0.2 6);
   --chart-2: oklch(0.62 0.15 255);
   --chart-3: oklch(0.75 0.15 75);
@@ -90,69 +78,38 @@
   --chart-7: oklch(0.66 0.17 340);
   --chart-8: oklch(0.7 0.13 130);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px light-dark(oklch(0.3 0.03 320 / 0.07), oklch(0 0 0 / 0.4));
-  --shadow-card: 0 1px 3px light-dark(oklch(0.3 0.03 320 / 0.08), oklch(0 0 0 / 0.45)),
-    0 10px 26px light-dark(oklch(0.3 0.03 320 / 0.06), oklch(0 0 0 / 0.32));
-  --shadow-pop: 0 18px 48px light-dark(oklch(0.3 0.03 320 / 0.18), oklch(0 0 0 / 0.58));
-
   /* Layout */
   --sidebar-width: 17rem;
   --header-height: 4rem;
-}
 
-[data-theme="light"] {
-  color-scheme: light;
-}
-[data-theme="dark"] {
-  color-scheme: dark;
-}
+  /* Motion */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-surface-hover: var(--surface-hover);
-  --color-surface-inset: var(--surface-inset);
+  /* Shadows mapped to HeroUI tokens */
+  --shadow-card: var(--surface-shadow);
+  --shadow-pop: var(--overlay-shadow);
 
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-
-  --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-faint-foreground: var(--faint-foreground);
-
-  --color-brand: var(--brand);
-  --color-brand-hover: var(--brand-hover);
-  --color-brand-active: var(--brand-active);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-brand-soft: var(--brand-soft);
-
-  --color-success: var(--success);
-  --color-success-soft: var(--success-soft);
-  --color-warning: var(--warning);
-  --color-warning-soft: var(--warning-soft);
-  --color-danger: var(--danger);
-  --color-danger-soft: var(--danger-soft);
-  --color-info: var(--info);
-  --color-info-soft: var(--info-soft);
-
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-chart-6: var(--chart-6);
-  --color-chart-7: var(--chart-7);
-  --color-chart-8: var(--chart-8);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  scrollbar-gutter: stable;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ------------------------------------------------------------------ *
- * Base
+ * Reset & base
  * ------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
 html {
   overscroll-behavior-y: none;
   scroll-padding-block-start: var(--header-height);
@@ -200,55 +157,23 @@ button,
 }
 
 :focus-visible {
-  outline: max(2px, 0.08em) solid var(--brand);
+  outline: max(2px, 0.08em) solid var(--focus);
   outline-offset: 2px;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border: 3px solid transparent;
-  border-radius: 99px;
-  background-clip: content-box;
 }
 
 /* ------------------------------------------------------------------ *
  * Utilities
  * ------------------------------------------------------------------ */
 .shadow-card {
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--surface-shadow);
 }
 .shadow-pop {
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--overlay-shadow);
 }
 
 .glass {
-  background: color-mix(in oklch, var(--surface) 78%, transparent);
-  backdrop-filter: blur(14px) saturate(1.3);
-}
-
-.skeleton {
-  background-image: linear-gradient(
-    90deg,
-    var(--surface-muted) 25%,
-    var(--surface-hover) 37%,
-    var(--surface-muted) 63%
-  );
-  background-size: 200% 100%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .skeleton {
-    animation: shimmer 1.4s linear infinite;
-  }
+  background: color-mix(in oklab, var(--surface) 76%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
 }
 
 .scrollbar-none {
@@ -258,16 +183,10 @@ button,
   display: none;
 }
 
-@keyframes shimmer {
-  from {
-    background-position: 150% 0;
-  }
-  to {
-    background-position: -150% 0;
-  }
-}
-
-@keyframes fade-in {
+/* ------------------------------------------------------------------ *
+ * Motion — smooth, reduced-motion aware
+ * ------------------------------------------------------------------ */
+@keyframes amare-fade-in {
   from {
     opacity: 0;
   }
@@ -276,10 +195,10 @@ button,
   }
 }
 
-@keyframes rise {
+@keyframes amare-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -287,16 +206,18 @@ button,
   }
 }
 
-@keyframes grow-x {
+@keyframes amare-scale-in {
   from {
-    transform: scaleX(0);
+    opacity: 0;
+    transform: scale(0.97);
   }
   to {
-    transform: scaleX(1);
+    opacity: 1;
+    transform: none;
   }
 }
 
-@keyframes slide-start {
+@keyframes amare-slide-start {
   from {
     transform: translateX(-100%);
   }
@@ -306,13 +227,29 @@ button,
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .animate-rise {
-    animation: rise 0.35s var(--ease-out) both;
-  }
   .animate-fade {
-    animation: fade-in 0.25s var(--ease-out) both;
+    animation: amare-fade-in 0.25s var(--ease-out) both;
+  }
+  .animate-rise {
+    animation: amare-rise 0.4s var(--ease-out) both;
+  }
+  .animate-scale-in {
+    animation: amare-scale-in 0.25s var(--ease-out) both;
   }
   .animate-slide-start {
-    animation: slide-start 0.25s var(--ease-out) both;
+    animation: amare-slide-start 0.25s var(--ease-out) both;
   }
+
+  /* Stagger helper for lists/grids */
+  .stagger > * {
+    animation: amare-rise 0.45s var(--ease-out) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 45ms; }
+  .stagger > *:nth-child(3) { animation-delay: 90ms; }
+  .stagger > *:nth-child(4) { animation-delay: 135ms; }
+  .stagger > *:nth-child(5) { animation-delay: 180ms; }
+  .stagger > *:nth-child(6) { animation-delay: 225ms; }
+  .stagger > *:nth-child(7) { animation-delay: 270ms; }
+  .stagger > *:nth-child(8) { animation-delay: 315ms; }
 }

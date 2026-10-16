@@ -311,20 +311,21 @@ export default function ProductsPage() {
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   Rows
-                  <select
-                    value={pageSize}
+                  <Select
+                    aria-label="Rows per page"
+                    className="w-20"
+                    value={String(pageSize)}
                     onChange={(event) => {
                       setPageSize(Number(event.target.value));
                       resetPage();
                     }}
-                    className="h-8 cursor-pointer rounded-lg border border-border bg-surface px-2 text-xs text-foreground"
                   >
                     {PAGE_SIZES.map((size) => (
                       <option key={size} value={size}>
                         {size}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <p className="text-xs text-muted-foreground">
                   Catalogue value{" "}

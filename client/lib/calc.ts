@@ -18,6 +18,27 @@ interface Token {
 
 const OPERATORS = new Set(["+", "-", "*", "/", "%", "^"]);
 
+/** Characters people actually type that mean the same operator. */
+const OPERATOR_ALIASES: Record<string, string> = {
+  "\u2212": "-", // − minus sign
+  "\u2013": "-", // – en dash
+  "\u2014": "-", // — em dash
+  "\uFE63": "-", // ﹣ small hyphen-minus
+  "\u00D7": "*", // × multiplication sign
+  "\u00B7": "*", // · middle dot
+  "\u22C5": "*", // ⋅ dot operator
+  "\u2217": "*", // ∗ asterisk operator
+  "\u00F7": "/", // ÷ division sign
+  "\u2215": "/", // ∕ division slash
+};
+
+/** Characters that carry no meaning and can be dropped. */
+const IGNORED = new Set(["=", "\u200B", "\uFEFF", "\u00A0", "\u2007", "\u2009", "\u202F"]);
+
+function isDigit(char: string): boolean {
+  return char >= "0" && char <= "9";
+}
+
 function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
   let index = 0;
@@ -25,15 +46,15 @@ function tokenize(input: string): Token[] {
   while (index < input.length) {
     const char = input[index];
 
-    if (char === " " || char === "\t" || char === "\n" || char === "\r") {
+    if (char === " " || char === "\t" || char === "\n" || char === "\r" || IGNORED.has(char)) {
       index += 1;
       continue;
     }
 
-    if (/[0-9.]/.test(char)) {
+    if (isDigit(char) || char === ".") {
       let number = "";
       let dots = 0;
-      while (index < input.length && /[0-9.]/.test(input[index])) {
+      while (index < input.length && (isDigit(input[index]) || input[index] === ".")) {
         if (input[index] === ".") dots += 1;
         number += input[index];
         index += 1;
@@ -66,18 +87,23 @@ function tokenize(input: string): Token[] {
     }
 
     if (char === ",") {
+      // A comma between digits is a thousands separator ("1,250"), otherwise
+      // it separates function arguments ("max(2,5)").
+      const previous = tokens[tokens.length - 1];
+      let lookahead = index + 1;
+      while (lookahead < input.length && input[lookahead] === " ") lookahead += 1;
+      if (previous?.type === "number" && isDigit(input[lookahead] ?? "")) {
+        index += 1;
+        continue;
+      }
       tokens.push({ type: "comma", value: char });
       index += 1;
       continue;
     }
 
-    if (char === "×") {
-      tokens.push({ type: "operator", value: "*" });
-      index += 1;
-      continue;
-    }
-    if (char === "÷") {
-      tokens.push({ type: "operator", value: "/" });
+    const alias = OPERATOR_ALIASES[char];
+    if (alias) {
+      tokens.push({ type: "operator", value: alias });
       index += 1;
       continue;
     }
@@ -233,18 +259,53 @@ export interface EvalResult {
   ok: boolean;
   value: number;
   error?: string;
+  /** True while the expression is merely unfinished (e.g. "1250 *") rather than wrong. */
+  incomplete?: boolean;
+}
+
+/**
+ * Detects expressions that are simply not finished yet — a trailing operator,
+ * an open bracket or a bare function name. These are not mistakes, they are
+ * what the expression looks like halfway through typing.
+ */
+function isIncomplete(tokens: Token[]): boolean {
+  if (!tokens.length) return true;
+
+  let depth = 0;
+  for (const token of tokens) {
+    if (token.type === "paren") depth += token.value === "(" ? 1 : -1;
+  }
+  if (depth > 0) return true;
+
+  const last = tokens[tokens.length - 1];
+  if (last.type === "operator" || last.type === "comma" || last.type === "identifier") return true;
+  if (last.type === "paren" && last.value === "(") return true;
+
+  return false;
 }
 
 /** Evaluates an arithmetic expression without using eval. */
 export function evaluateExpression(input: string): EvalResult {
+  let tokens: Token[];
   try {
-    const value = new Parser(tokenize(input)).parse();
-    return { ok: true, value };
+    tokens = tokenize(input);
   } catch (error) {
     return {
       ok: false,
       value: 0,
       error: error instanceof Error ? error.message : "Could not evaluate the expression.",
+      incomplete: false,
+    };
+  }
+
+  try {
+    return { ok: true, value: new Parser(tokens).parse() };
+  } catch (error) {
+    return {
+      ok: false,
+      value: 0,
+      error: error instanceof Error ? error.message : "Could not evaluate the expression.",
+      incomplete: isIncomplete(tokens),
     };
   }
 }

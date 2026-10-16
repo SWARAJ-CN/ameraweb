@@ -17,7 +17,7 @@ export function ThemeToggle() {
     <div
       role="group"
       aria-label="Colour theme"
-      className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-surface-muted p-0.5"
+      className="inline-flex items-center gap-0.5 rounded-field bg-segment p-0.5 shadow-field"
     >
       {MODES.map((option) => {
         const Icon = option.icon;
@@ -31,10 +31,10 @@ export function ThemeToggle() {
             aria-pressed={selected}
             onClick={() => setMode(option.value)}
             className={cn(
-              "grid size-7 place-items-center rounded-md transition-colors duration-150",
+              "grid size-7 place-items-center rounded-[calc(var(--radius-field)-3px)] transition-all duration-200",
               selected
-                ? "bg-surface text-foreground shadow-sm"
-                : "text-faint-foreground hover:text-foreground"
+                ? "bg-surface text-foreground shadow-field"
+                : "text-segment-foreground hover:text-foreground"
             )}
           >
             <Icon className="size-3.5" />

@@ -12,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
 import { PageHeader, Pagination, SearchInput } from "@/components/ui/Controls";
-import { Field, Input, Select } from "@/components/ui/Input";
+import { Field, Select } from "@/components/ui/Input";
+import { DateInput } from "@/components/ui/DatePicker";
 import { TBody, TD, TH, THead, TR, Table, TableWrapper } from "@/components/ui/Table";
 import { downloadCsv } from "@/lib/csv";
 import { formatCurrency, formatDate, parseDateInput } from "@/lib/format";
@@ -172,9 +173,8 @@ export default function SalesPage() {
             </Select>
           </Field>
           <Field label="From" htmlFor="sales-from" className="w-40">
-            <Input
+            <DateInput
               id="sales-from"
-              type="date"
               value={from}
               max={to || undefined}
               onChange={(event) => {
@@ -184,9 +184,8 @@ export default function SalesPage() {
             />
           </Field>
           <Field label="To" htmlFor="sales-to" className="w-40">
-            <Input
+            <DateInput
               id="sales-to"
-              type="date"
               value={to}
               min={from || undefined}
               onChange={(event) => {
@@ -221,13 +220,14 @@ export default function SalesPage() {
                   {rows.map((sale) => (
                     <TR key={sale.id}>
                       <TD>
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setDetail(sale)}
-                          className="font-mono text-xs font-semibold text-brand hover:underline"
+                          className="h-auto justify-start px-0 font-mono text-xs font-semibold text-brand hover:bg-transparent hover:underline"
                         >
                           {sale.billNumber}
-                        </button>
+                        </Button>
                         <div className="mt-0.5">
                           <Badge tone={sale.billType === "custom" ? "info" : "neutral"}>
                             {sale.billType === "custom" ? "Custom" : "Product"}
@@ -295,20 +295,21 @@ export default function SalesPage() {
               <div className="flex items-center gap-3">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   Rows
-                  <select
-                    value={pageSize}
+                  <Select
+                    aria-label="Rows per page"
+                    className="w-20"
+                    value={String(pageSize)}
                     onChange={(event) => {
                       setPageSize(Number(event.target.value));
                       resetPage();
                     }}
-                    className="h-8 cursor-pointer rounded-lg border border-border bg-surface px-2 text-xs text-foreground"
                   >
                     {PAGE_SIZES.map((size) => (
                       <option key={size} value={size}>
                         {size}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <p className="text-xs text-muted-foreground">
                   Filtered total{" "}

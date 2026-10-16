@@ -56,11 +56,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           onOpenMenu={() => setDrawerOpen(true)}
         />
         <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">
-          <div className="mx-auto flex w-full max-w-[100rem] flex-col gap-5">
+          <div
+            key={pathname}
+            className="animate-rise mx-auto flex w-full max-w-[100rem] flex-col gap-5"
+          >
             {children}
           </div>
         </main>
-        <footer className="border-t border-border px-4 py-4 sm:px-6 lg:px-8">
+        <footer className="border-t border-separator px-4 py-4 sm:px-6 lg:px-8">
           <p className="text-center text-[11px] text-faint-foreground">
             Amare Handmades admin · data served by amera-backend.onrender.com
           </p>

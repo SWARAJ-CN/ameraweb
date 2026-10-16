@@ -122,7 +122,7 @@ export default function DashboardPage() {
         <DashboardSkeleton />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Revenue"
               value={formatCurrency(summary.salesTotal, currency)}
@@ -330,8 +330,8 @@ export default function DashboardPage() {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+    <div className="rounded-field bg-surface px-4 py-3 shadow-field">
+      <p className="text-xs font-medium text-muted">{label}</p>
       <p className="mt-1 text-lg font-bold tabular-nums text-foreground">{value}</p>
     </div>
   );

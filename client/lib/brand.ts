@@ -10,7 +10,7 @@
  * in `app/layout.tsx` can restore the chosen colour before first paint.
  */
 
-export const BRAND_CACHE_KEY = "amare.brand.vars";
+export const BRAND_CACHE_KEY = "amare.brand.vars.v2";
 
 export const DEFAULT_BRAND = "#FF5A79";
 
@@ -151,29 +151,22 @@ function bestForeground(rgb: Rgb): string {
   return luminance(rgb) > 0.5 ? "#141018" : "#ffffff";
 }
 
+/** The accent lightness used for both themes, matching HeroUI's default. */
+const ACCENT_LIGHTNESS = 58;
+
 /**
- * Derives the full set of `--brand-*` tokens for a colour, expressed with
- * `light-dark()` so the single token still switches with the theme.
+ * Derives the HeroUI accent tokens for a colour. HeroUI keeps `--accent`
+ * constant across light and dark, deriving hover/soft variants with
+ * `color-mix()` — so a single pair of values is all we need to set.
  */
 export function brandVariables(hex: string): Record<string, string> {
   const base = normalizePrimaryColor(hex);
   const { h, s } = hexToHsl(base);
-  const sat = Math.round(Math.min(100, Math.max(40, s)));
-  const lightL = 52;
-  const darkL = 70;
-
-  const hsl = (l: number, alpha?: number) =>
-    `hsl(${h.toFixed(1)} ${sat}% ${Math.round(l)}%${alpha === undefined ? "" : ` / ${alpha}`})`;
+  const sat = Math.round(Math.min(100, Math.max(45, s)));
 
   return {
-    "--brand": `light-dark(${hsl(lightL)}, ${hsl(darkL)})`,
-    "--brand-hover": `light-dark(${hsl(lightL - 6)}, ${hsl(darkL + 5)})`,
-    "--brand-active": `light-dark(${hsl(lightL - 11)}, ${hsl(darkL + 9)})`,
-    "--brand-foreground": `light-dark(${bestForeground(
-      hslToRgb(h, sat, lightL)
-    )}, ${bestForeground(hslToRgb(h, sat, darkL))})`,
-    "--brand-soft": `light-dark(${hsl(lightL, 0.12)}, ${hsl(darkL, 0.18)})`,
-    "--brand-ring": `light-dark(${hsl(lightL, 0.4)}, ${hsl(darkL, 0.45)})`,
+    "--accent": `hsl(${h.toFixed(1)} ${sat}% ${ACCENT_LIGHTNESS}%)`,
+    "--accent-foreground": bestForeground(hslToRgb(h, sat, ACCENT_LIGHTNESS)),
   };
 }
 
@@ -196,6 +189,6 @@ export function applyBrand(primaryColor?: string | null): void {
 export function brandForeground(hex: string): string {
   const base = normalizePrimaryColor(hex);
   const { h, s } = hexToHsl(base);
-  const sat = Math.round(Math.min(100, Math.max(40, s)));
-  return bestForeground(hslToRgb(h, sat, 52));
+  const sat = Math.round(Math.min(100, Math.max(45, s)));
+  return bestForeground(hslToRgb(h, sat, ACCENT_LIGHTNESS));
 }

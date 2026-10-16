@@ -16,6 +16,10 @@ import type { Calculation } from "@/lib/types";
 
 const KEYS = ["7", "8", "9", "/", "4", "5", "6", "*", "1", "2", "3", "-", "0", ".", "%", "+"];
 
+const OPERATOR_KEYS = new Set(["+", "-", "*", "/", "%", "^"]);
+
+const isDigit = (char: string) => char >= "0" && char <= "9";
+
 export default function CalculationsPage() {
   const { calculations, settings, loading, createCalculation, deleteCalculation } = useData();
   const toast = useToast();
@@ -42,7 +46,35 @@ export default function CalculationsPage() {
   }, [calculations, search]);
 
   const append = (value: string) =>
-    setExpression((current) => `${current}${value}`);
+    setExpression((current) => {
+      const last = current.slice(-1);
+      const isOperator = (char: string) => OPERATOR_KEYS.has(char);
+
+      // Never start with a binary operator (a leading minus is fine).
+      if (!current) return isOperator(value) && value !== "-" ? current : value;
+
+      if (isOperator(value) && isOperator(last)) {
+        // Swap the trailing operator, but allow "5*-2" style negatives.
+        if (value === "-" && last !== "-") return `${current}${value}`;
+        return `${current.slice(0, -1)}${value}`;
+      }
+
+      if (value === ".") {
+        const tail = current.split(/[^0-9.]/).pop() ?? "";
+        if (tail.includes(".")) return current;
+        return tail ? `${current}.` : `${current}0.`;
+      }
+
+      if (value === "(" && (isDigit(last) || last === ")")) return `${current}*(`;
+
+      if (value === ")") {
+        const depth =
+          (current.match(/\(/g)?.length ?? 0) - (current.match(/\)/g)?.length ?? 0);
+        if (depth <= 0 || isOperator(last) || last === "(") return current;
+      }
+
+      return `${current}${value}`;
+    });
 
   const backspace = () => setExpression((current) => current.slice(0, -1));
   const clear = () => {
@@ -52,7 +84,10 @@ export default function CalculationsPage() {
 
   const save = async () => {
     if (!evaluation.ok) {
-      toast.error("Nothing to save", evaluation.error);
+      toast.error(
+        evaluation.incomplete ? "Finish the expression" : "Nothing to save",
+        evaluation.error
+      );
       return;
     }
     setSaving(true);
@@ -143,6 +178,10 @@ export default function CalculationsPage() {
                       {formatCurrency(evaluation.value, currency)}
                     </span>
                   </>
+                ) : evaluation.incomplete ? (
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Keep going — the expression isn’t finished yet.
+                  </span>
                 ) : (
                   <span className="text-sm font-medium text-danger">{evaluation.error}</span>
                 )

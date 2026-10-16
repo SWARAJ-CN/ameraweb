@@ -1,30 +1,32 @@
 import type { HTMLAttributes } from "react";
+import { Chip } from "@heroui/react";
 import { cn } from "@/lib/cn";
 
 type Tone = "neutral" | "brand" | "success" | "warning" | "danger" | "info";
 
-const TONES: Record<Tone, string> = {
-  neutral: "bg-surface-muted text-muted-foreground border-border",
-  brand: "bg-brand-soft text-brand border-transparent",
-  success: "bg-success-soft text-success border-transparent",
-  warning: "bg-warning-soft text-warning border-transparent",
-  danger: "bg-danger-soft text-danger border-transparent",
-  info: "bg-info-soft text-info border-transparent",
+const TONES: Record<Tone, "default" | "accent" | "success" | "warning" | "danger"> = {
+  neutral: "default",
+  brand: "accent",
+  success: "success",
+  warning: "warning",
+  danger: "danger",
+  info: "accent",
 };
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+interface BadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, "color"> {
   tone?: Tone;
 }
 
-export function Badge({ tone = "neutral", className, ...props }: BadgeProps) {
+export function Badge({ tone = "neutral", className, children, ...props }: BadgeProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
-        TONES[tone],
-        className
-      )}
+    <Chip
+      color={TONES[tone]}
+      variant="soft"
+      size="sm"
+      className={cn("font-semibold", className)}
       {...props}
-    />
+    >
+      <Chip.Label>{children}</Chip.Label>
+    </Chip>
   );
 }
