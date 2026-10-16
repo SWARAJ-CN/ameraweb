@@ -1,5 +1,6 @@
 import {
   Calculator,
+  Code2,
   Database,
   LayoutDashboard,
   Package,
@@ -90,6 +91,17 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Settings",
         icon: Settings,
         description: "Shop profile and invoice",
+      },
+    ],
+  },
+  {
+    title: "Advanced",
+    items: [
+      {
+        href: "/developer",
+        label: "Developer",
+        icon: Code2,
+        description: "Edit and ship the codebase",
       },
     ],
   },
