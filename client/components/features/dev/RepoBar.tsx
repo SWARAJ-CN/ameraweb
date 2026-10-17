@@ -73,53 +73,54 @@ export function RepoBar({ repo, onNotifyDev }: RepoBarProps) {
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-3 p-4">
-        {repo.user.avatarUrl ? (
-          <img
-            src={repo.user.avatarUrl}
-            alt=""
-            className="size-9 flex-none rounded-lg ring-1 ring-border"
-          />
-        ) : (
-          <span className="grid size-9 flex-none place-items-center rounded-lg bg-surface-muted text-muted">
-            <KeyRound className="size-4" />
-          </span>
-        )}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          {repo.user.avatarUrl ? (
+            <img
+              src={repo.user.avatarUrl}
+              alt=""
+              className="size-9 flex-none rounded-lg ring-1 ring-border"
+            />
+          ) : (
+            <span className="grid size-9 flex-none place-items-center rounded-lg bg-surface-muted text-muted">
+              <KeyRound className="size-4" />
+            </span>
+          )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <a
-              href={repo.htmlUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="max-w-full truncate text-sm font-semibold text-foreground transition-colors duration-150 hover:text-accent"
-            >
-              {repo.fullName}
-            </a>
-            <Badge tone={repo.private ? "warning" : "info"}>
-              {repo.private ? (
-                <>
-                  <Lock className="size-3" /> private
-                </>
-              ) : (
-                <>
-                  <Globe className="size-3" /> public
-                </>
-              )}
-            </Badge>
-            {repo.language ? <Badge tone="neutral">{repo.language}</Badge> : null}
-            {repo.license ? (
-              <Badge tone="neutral">
-                <Tag className="size-3" />
-                {repo.license}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={repo.htmlUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="max-w-full truncate text-sm font-semibold text-foreground transition-colors duration-150 hover:text-accent"
+              >
+                {repo.fullName}
+              </a>
+              <Badge tone={repo.private ? "warning" : "info"} >
+                {repo.private ? (
+                  <>
+                    <Lock className="size-3" /> private
+                  </>
+                ) : (
+                  <>
+                    <Globe className="size-3" /> public
+                  </>
+                )}
               </Badge>
-            ) : null}
+              {repo.language ? <Badge tone="neutral">{repo.language}</Badge> : null}
+              {repo.license ? (
+                <Badge tone="neutral">
+                  <Tag className="size-3" />
+                  {repo.license}
+                </Badge>
+              ) : null}
+            </div>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {repo.description || "No description on the repository."}
+            </p>
           </div>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {repo.description || "No description on the repository."}
-          </p>
         </div>
-
-        <div className="flex flex-none items-center gap-2">
+        <div className="flex flex-none flex-wrap items-center gap-2 max-sm:w-full">
           <Button variant="ghost" size="sm" onClick={onNotifyDev}>
             <MessageCircle className="size-4" />
             Notify dev

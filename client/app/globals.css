@@ -91,8 +91,6 @@
   --shadow-pop: var(--overlay-shadow);
 
   scrollbar-gutter: stable;
-  text-wrap: pretty;
-  overflow-wrap: break-word;
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -131,11 +129,26 @@ body {
   line-height: 1.55;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  text-wrap: balance;
+/* Typographic wrapping lives in the base layer on purpose.
+ *
+ * `text-wrap` is a shorthand that also controls `text-wrap-mode`, and an
+ * unlayered rule outranks *every* utility class. Declared unlayered, the
+ * `text-wrap: balance` below silently re-enabled wrapping inside elements that
+ * asked for `truncate`, so long headings (the topbar page title) broke onto
+ * several lines instead of ellipsising. Base layer keeps the default while
+ * letting `truncate` / `text-nowrap` / `whitespace-*` win. */
+@layer base {
+  :root {
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
 }
 
 input,

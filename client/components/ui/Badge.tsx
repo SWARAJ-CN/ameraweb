@@ -23,7 +23,7 @@ export function Badge({ tone = "neutral", className, children, ...props }: Badge
       color={TONES[tone]}
       variant="soft"
       size="sm"
-      className={cn("font-semibold", className)}
+      className={cn("font-semibold ", className)}
       {...props}
     >
       <Chip.Label>{children}</Chip.Label>

@@ -270,7 +270,7 @@ export default function DeveloperPage() {
   }, [pulls.length, repo, runs.length]);
 
   const fileCount = useMemo(
-    () => (tree ? tree.entries.filter((entry) => entry.type === "blob").length : null),
+    () => (tree?.entries ? tree.entries.filter((entry) => entry.type === "blob").length : null),
     [tree]
   );
 
