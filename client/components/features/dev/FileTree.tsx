@@ -4,16 +4,75 @@ import { useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
+  File,
   FileCode2,
+  FileImage,
+  FileJson,
+  FileText,
   Folder,
   FolderOpen,
+  Lock,
+  Palette,
   Search,
+  Settings2,
+  Terminal,
+  type LucideIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { CloseButton } from "@heroui/react";
 import type { DevTreeEntry } from "@/lib/dev-types";
 import { cn } from "@/lib/cn";
 import { formatBytes } from "./dev-utils";
+
+interface IconSpec {
+  Icon: LucideIcon;
+  /** Semantic token class, so file colours follow the admin theme. */
+  tone: string;
+}
+
+const FILE_ICONS: Record<string, IconSpec> = {
+  ts: { Icon: FileCode2, tone: "text-brand" },
+  tsx: { Icon: FileCode2, tone: "text-brand" },
+  js: { Icon: FileCode2, tone: "text-brand" },
+  jsx: { Icon: FileCode2, tone: "text-brand" },
+  mjs: { Icon: FileCode2, tone: "text-brand" },
+  cjs: { Icon: FileCode2, tone: "text-brand" },
+  json: { Icon: FileJson, tone: "text-warning" },
+  css: { Icon: Palette, tone: "text-info" },
+  scss: { Icon: Palette, tone: "text-info" },
+  less: { Icon: Palette, tone: "text-info" },
+  html: { Icon: FileCode2, tone: "text-info" },
+  xml: { Icon: FileCode2, tone: "text-info" },
+  svg: { Icon: FileImage, tone: "text-info" },
+  md: { Icon: FileText, tone: "text-muted" },
+  mdx: { Icon: FileText, tone: "text-muted" },
+  txt: { Icon: FileText, tone: "text-muted" },
+  yml: { Icon: Settings2, tone: "text-success" },
+  yaml: { Icon: Settings2, tone: "text-success" },
+  toml: { Icon: Settings2, tone: "text-success" },
+  ini: { Icon: Settings2, tone: "text-success" },
+  env: { Icon: Settings2, tone: "text-success" },
+  conf: { Icon: Settings2, tone: "text-success" },
+  sh: { Icon: Terminal, tone: "text-success" },
+  bash: { Icon: Terminal, tone: "text-success" },
+  zsh: { Icon: Terminal, tone: "text-success" },
+  lock: { Icon: Lock, tone: "text-faint-foreground" },
+  png: { Icon: FileImage, tone: "text-info" },
+  jpg: { Icon: FileImage, tone: "text-info" },
+  jpeg: { Icon: FileImage, tone: "text-info" },
+  webp: { Icon: FileImage, tone: "text-info" },
+  avif: { Icon: FileImage, tone: "text-info" },
+  ico: { Icon: FileImage, tone: "text-info" },
+};
+
+const DEFAULT_ICON: IconSpec = { Icon: File, tone: "text-faint-foreground" };
+
+function iconFor(path: string): IconSpec {
+  const name = path.split("/").pop() ?? "";
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0) return DEFAULT_ICON;
+  return FILE_ICONS[name.slice(dot + 1).toLowerCase()] ?? DEFAULT_ICON;
+}
 
 interface TreeNode {
   name: string;
@@ -94,6 +153,7 @@ export function FileTree({
     const active = entry.path === activePath;
     const changed = changedPaths.has(entry.path);
     const deleted = deletedPaths.has(entry.path);
+    const { Icon, tone } = iconFor(entry.path);
     return (
       <button
         key={entry.path}
@@ -108,7 +168,7 @@ export function FileTree({
         )}
         style={{ paddingInlineStart: `${depth * 12 + 8}px` }}
       >
-        <FileCode2 className="size-3.5 flex-none opacity-70" />
+        <Icon className={cn("size-3.5 flex-none", active ? "opacity-100" : tone)} />
         <span className={cn("truncate", deleted && "line-through opacity-60")}>
           {entry.path.split("/").pop()}
         </span>

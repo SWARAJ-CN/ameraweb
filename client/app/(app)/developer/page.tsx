@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  FileCode2,
   GitBranch,
   GitCommitHorizontal,
   GitPullRequest,
@@ -33,7 +34,7 @@ import { PullsPanel } from "@/components/features/dev/PullsPanel";
 import { ActionsPanel } from "@/components/features/dev/ActionsPanel";
 import { CommitsPanel } from "@/components/features/dev/CommitsPanel";
 import { RepoStatusCard } from "@/components/features/dev/RepoStatusCard";
-import { ExternalButton } from "@/components/features/dev/DevBits";
+import { DevStat, ExternalButton } from "@/components/features/dev/DevBits";
 import {
   activityId,
   whatsappLink,
@@ -182,6 +183,14 @@ export default function DeveloperPage() {
   const record = useCallback((entry: DevActivity) => {
     setActivity((current) => [entry, ...current].slice(0, 12));
   }, []);
+
+  const openBranch = useCallback(
+    (next: string) => {
+      setSection("code");
+      selectBranch(next);
+    },
+    [selectBranch]
+  );
 
   const createBranch = useCallback(
     async (name: string, from: string) => {
@@ -360,12 +369,42 @@ export default function DeveloperPage() {
         onNotifyDev={notifyDev}
       />
 
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <DevStat
+          icon={<GitBranch className="size-3.5" />}
+          label="Branches"
+          value={loadingBranches ? "…" : branches.length}
+        />
+        <DevStat
+          icon={<GitPullRequest className="size-3.5" />}
+          label="Open pull requests"
+          value={loadingPulls ? "…" : pulls.length}
+        />
+        <DevStat
+          icon={<Rocket className="size-3.5" />}
+          label="Workflow runs"
+          value={loadingRuns ? "…" : runs.length}
+        />
+        <DevStat
+          icon={<FileCode2 className="size-3.5" />}
+          label={`Files on ${branch}`}
+          value={
+            treeLoading && !tree
+              ? "…"
+              : tree
+                ? tree.entries.filter((entry) => entry.type === "blob").length.toLocaleString()
+                : "—"
+          }
+        />
+      </dl>
+
       {section === "code" ? (
         <CodeBrowser
           repo={repo}
           branch={branch}
           branches={branches}
           onBranchChange={selectBranch}
+          onCreateBranch={createBranch}
           tree={tree}
           treeLoading={treeLoading}
           treeError={treeError}
@@ -381,7 +420,7 @@ export default function DeveloperPage() {
           defaultBranch={repo.defaultBranch}
           loading={loadingBranches}
           busy={creatingBranch}
-          onSelect={selectBranch}
+          onSelect={openBranch}
           onCreate={createBranch}
           onRefresh={reloadAll}
         />
