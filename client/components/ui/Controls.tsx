@@ -74,12 +74,15 @@ export function SearchInput({
   return (
     <div className={cn("relative", className)}>
       <Search className="pointer-events-none absolute start-3 top-1/2 z-10 size-4 -translate-y-1/2 text-faint-foreground" />
+      {/* `w-full` matters: a native input falls back to its intrinsic ~274px
+          width, which bursts out of a fixed-width wrapper (`w-40`, `w-48`) and
+          drags the whole page past the viewport on a phone. */}
       <Input
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="ps-9 pe-9"
+        className="w-full ps-9 pe-9"
       />
       {value ? (
         <CloseButton

@@ -27,7 +27,10 @@ export function CardHeader({
   return (
     <HeroCard.Header
       className={cn(
-        "flex-row items-start justify-between gap-3 border-b border-separator px-5 py-4",
+        // `flex-wrap` lets the actions drop to their own line instead of
+        // squeezing the title or pushing the card (and the page) wider than
+        // the screen.
+        "flex-row flex-wrap items-start justify-between gap-3 border-b border-separator px-5 py-4",
         className
       )}
       {...props}
@@ -46,7 +49,9 @@ export function CardHeader({
           ) : null}
         </div>
       )}
-      {actions ? <div className="flex flex-none items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </HeroCard.Header>
   );
 }
