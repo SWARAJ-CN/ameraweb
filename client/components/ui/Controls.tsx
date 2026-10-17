@@ -31,7 +31,9 @@ export function SegmentedControl({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex flex-none items-center gap-0.5 rounded-field bg-segment p-0.5 shadow-field",
+        // `min-w-0` + horizontal scrolling keep the strip usable on narrow
+        // phones instead of forcing the whole page wider than the screen.
+        "inline-flex min-w-0 max-w-full flex-initial shrink items-center gap-0.5 overflow-x-auto rounded-field bg-segment p-0.5 shadow-field scrollbar-none",
         className
       )}
     >
@@ -44,7 +46,7 @@ export function SegmentedControl({
             aria-pressed={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              "rounded-[calc(var(--radius-field)-3px)] px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200",
+              "flex-none rounded-[calc(var(--radius-field)-3px)] px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200",
               selected
                 ? "bg-surface text-foreground shadow-field"
                 : "text-segment-foreground hover:text-foreground"
@@ -195,7 +197,9 @@ export function PageHeader({ title, description, actions, className }: PageHeade
           <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

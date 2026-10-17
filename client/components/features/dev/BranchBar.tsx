@@ -49,7 +49,8 @@ export function BranchBar({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const onlyBranch = branches.length === 1;
+  const onlyBranch = branches.length <= 1;
+  const soleBranch = branches.length === 1;
 
   const submit = async () => {
     const clean = name.trim();
@@ -102,12 +103,18 @@ export function BranchBar({
               ))}
             </Select>
           )}
-          {onlyBranch ? (
+          {soleBranch ? (
             <span className="hidden text-[11px] text-faint-foreground sm:inline">
               the only branch on GitHub
             </span>
           ) : null}
         </div>
+
+        {branch !== repo.defaultBranch ? (
+          <Badge tone="warning">branches off {repo.defaultBranch}</Badge>
+        ) : (
+          <Badge tone="brand">default</Badge>
+        )}
 
         <Badge tone="neutral">
           <GitCommitHorizontal className="size-3" />
@@ -119,12 +126,6 @@ export function BranchBar({
             {fileCount.toLocaleString()} file{fileCount === 1 ? "" : "s"}
           </Badge>
         ) : null}
-
-        {branch !== repo.defaultBranch ? (
-          <Badge tone="warning">branches off {repo.defaultBranch}</Badge>
-        ) : (
-          <Badge tone="brand">default</Badge>
-        )}
 
         <div className="ms-auto flex flex-wrap items-center gap-2">
           <Button

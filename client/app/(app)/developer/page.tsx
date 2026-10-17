@@ -1,22 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FileCode2,
   GitBranch,
   GitCommitHorizontal,
   GitPullRequest,
-  MessageCircle,
   RefreshCw,
   Rocket,
   ShieldAlert,
-  Terminal,
 } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { CenteredSpinner, EmptyState, Notice } from "@/components/ui/Feedback";
-import { PageHeader, SegmentedControl } from "@/components/ui/Controls";
+import { Card } from "@/components/ui/Card";
+import { CenteredSpinner, Notice } from "@/components/ui/Feedback";
+import { PageHeader } from "@/components/ui/Controls";
 import { useToast } from "@/components/providers/ToastProvider";
 import { devApi } from "@/lib/dev-client";
 import type {
@@ -33,23 +29,20 @@ import { BranchesPanel } from "@/components/features/dev/BranchesPanel";
 import { PullsPanel } from "@/components/features/dev/PullsPanel";
 import { ActionsPanel } from "@/components/features/dev/ActionsPanel";
 import { CommitsPanel } from "@/components/features/dev/CommitsPanel";
-import { RepoStatusCard } from "@/components/features/dev/RepoStatusCard";
-import { DevStat, ExternalButton } from "@/components/features/dev/DevBits";
-import {
-  activityId,
-  whatsappLink,
-  type DevActivity,
-} from "@/components/features/dev/dev-utils";
+import { RepoBar } from "@/components/features/dev/RepoBar";
+import { DevTabs } from "@/components/features/dev/DevTabs";
+import { ExternalButton } from "@/components/features/dev/DevBits";
+import { activityId, whatsappLink, type DevActivity } from "@/components/features/dev/dev-utils";
 
-type Section = "code" | "branches" | "pulls" | "actions" | "commits";
+type Section = "code" | "branches" | "pulls" | "commits" | "actions";
 
-const SECTIONS = [
-  { value: "code", label: "Code" },
-  { value: "branches", label: "Branches" },
-  { value: "pulls", label: "Pull requests" },
-  { value: "commits", label: "Commits" },
-  { value: "actions", label: "Actions" },
-];
+const SECTION_LABELS: Record<Section, string> = {
+  code: "Code",
+  branches: "Branches",
+  pulls: "Pull requests",
+  commits: "Commits",
+  actions: "Actions",
+};
 
 function reason(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
@@ -276,12 +269,28 @@ export default function DeveloperPage() {
     window.open(whatsappLink(message), "_blank", "noopener,noreferrer");
   }, [pulls.length, repo, runs.length]);
 
+  const fileCount = useMemo(
+    () => (tree ? tree.entries.filter((entry) => entry.type === "blob").length : null),
+    [tree]
+  );
+
+  const tabs = useMemo(
+    () => [
+      { value: "code", label: SECTION_LABELS.code, count: fileCount },
+      { value: "branches", label: SECTION_LABELS.branches, count: branches.length },
+      { value: "pulls", label: SECTION_LABELS.pulls, count: pulls.length },
+      { value: "commits", label: SECTION_LABELS.commits, count: commits.length },
+      { value: "actions", label: SECTION_LABELS.actions, count: runs.length },
+    ],
+    [branches.length, commits.length, fileCount, pulls.length, runs.length]
+  );
+
   if (loadingRepo && !repo) {
     return (
       <>
         <PageHeader
-          title="Developer Mode"
-          description="Read and edit the deployed codebase, then ship it from here."
+          title="Developer"
+          description="Browse, edit and ship this repository without leaving the admin."
         />
         <CenteredSpinner label="Contacting GitHub…" />
       </>
@@ -293,8 +302,8 @@ export default function DeveloperPage() {
     return (
       <>
         <PageHeader
-          title="Developer Mode"
-          description="Read and edit the deployed codebase, then ship it from here."
+          title="Developer"
+          description="Browse, edit and ship this repository without leaving the admin."
         />
         {missingToken ? (
           <Notice tone="warning" title="GitHub token is not configured">
@@ -330,73 +339,29 @@ export default function DeveloperPage() {
   return (
     <>
       <PageHeader
-        title="Developer Mode"
-        description="Browse, edit and ship the codebase without leaving the admin."
+        title="Developer"
+        description="Browse, edit and ship this repository without leaving the admin."
         actions={
-          <>
-            <SegmentedControl
-              ariaLabel="Developer section"
-              options={SECTIONS}
-              value={section}
-              onChange={(value) => setSection(value as Section)}
-            />
-            <Button variant="ghost" onClick={notifyDev}>
-              <MessageCircle className="size-4" />
-              Notify dev
-            </Button>
-            <Button variant="outline" onClick={reloadAll} loading={loadingRepo}>
-              <RefreshCw className="size-4" />
-              Reload
-            </Button>
-          </>
+          <Button variant="outline" onClick={reloadAll} loading={loadingRepo}>
+            <RefreshCw className="size-4" />
+            Reload
+          </Button>
         }
       />
 
-      <Notice
-        tone="warning"
-        title="Full write access"
-        action={<Badge tone="danger">admin</Badge>}
-      >
-        This tab can edit every file in <span className="font-mono">{repo.fullName}</span> and
-        commit straight to <span className="font-mono">{repo.defaultBranch}</span>. Pushes here
-        reach production, so review the diff before you ship.
-      </Notice>
+      <RepoBar repo={repo} onNotifyDev={notifyDev} />
 
-      <RepoStatusCard
-        repo={repo}
-        refreshing={loadingRepo}
-        onRefresh={reloadAll}
-        onNotifyDev={notifyDev}
-      />
+      <DevTabs tabs={tabs} value={section} onChange={(value) => setSection(value as Section)} />
 
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <DevStat
-          icon={<GitBranch className="size-3.5" />}
-          label="Branches"
-          value={loadingBranches ? "…" : branches.length}
-        />
-        <DevStat
-          icon={<GitPullRequest className="size-3.5" />}
-          label="Open pull requests"
-          value={loadingPulls ? "…" : pulls.length}
-        />
-        <DevStat
-          icon={<Rocket className="size-3.5" />}
-          label="Workflow runs"
-          value={loadingRuns ? "…" : runs.length}
-        />
-        <DevStat
-          icon={<FileCode2 className="size-3.5" />}
-          label={`Files on ${branch}`}
-          value={
-            treeLoading && !tree
-              ? "…"
-              : tree
-                ? tree.entries.filter((entry) => entry.type === "blob").length.toLocaleString()
-                : "—"
-          }
-        />
-      </dl>
+      <p className="flex items-start gap-2 rounded-xl border border-warning-soft-foreground/25 bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
+        <ShieldAlert className="mt-0.5 size-3.5 flex-none" />
+        <span>
+          Full write access. Commits and pushes go straight to{" "}
+          <span className="font-mono font-semibold">{repo.defaultBranch}</span> on{" "}
+          <span className="font-mono">{repo.fullName}</span> and reach production, so review the
+          diff before you ship.
+        </span>
+      </p>
 
       {section === "code" ? (
         <CodeBrowser
@@ -453,69 +418,48 @@ export default function DeveloperPage() {
       ) : null}
 
       {activity.length ? (
-        <Card>
-          <CardHeader
-            title="Session activity"
-            description="Everything you shipped from this browser session."
-            actions={
-              <Button variant="ghost" size="sm" onClick={() => setActivity([])}>
-                Clear
-              </Button>
-            }
-          />
-          <CardContent className="p-0">
-            <ul className="divide-y divide-separator">
-              {activity.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="flex flex-wrap items-center gap-3 px-5 py-3 text-sm"
-                >
-                  <span className="grid size-8 flex-none place-items-center rounded-lg bg-surface-muted text-muted">
-                    {entry.kind === "push" ? (
-                      <Rocket className="size-4" />
-                    ) : entry.kind === "merge" ? (
-                      <GitPullRequest className="size-4" />
-                    ) : entry.kind === "branch" ? (
-                      <GitBranch className="size-4" />
-                    ) : entry.kind === "pull" ? (
-                      <GitPullRequest className="size-4" />
-                    ) : (
-                      <GitCommitHorizontal className="size-4" />
-                    )}
+        <Card className="overflow-clip">
+          <div className="flex items-center justify-between gap-3 border-b border-separator px-4 py-2.5">
+            <h2 className="text-xs font-semibold tracking-wide text-faint-foreground uppercase">
+              This session
+            </h2>
+            <Button variant="ghost" size="sm" onClick={() => setActivity([])}>
+              Clear
+            </Button>
+          </div>
+          <ul className="divide-y divide-separator">
+            {activity.map((entry) => (
+              <li key={entry.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                <span className="grid size-7 flex-none place-items-center rounded-lg bg-surface-muted text-muted">
+                  {entry.kind === "push" ? (
+                    <Rocket className="size-3.5" />
+                  ) : entry.kind === "branch" ? (
+                    <GitBranch className="size-3.5" />
+                  ) : entry.kind === "pull" || entry.kind === "merge" ? (
+                    <GitPullRequest className="size-3.5" />
+                  ) : (
+                    <GitCommitHorizontal className="size-3.5" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-medium text-foreground">
+                    {entry.title}
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-foreground">
-                      {entry.title}
-                    </span>
-                    <span className="block truncate text-xs text-muted">{entry.detail}</span>
-                  </span>
-                  <span className="flex-none text-xs text-muted">
-                    {relativeTime(entry.at)}
-                  </span>
-                  {entry.url ? (
-                    <ExternalButton href={entry.url} variant="ghost" size="sm">
-                      Open
-                    </ExternalButton>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
+                  <span className="block truncate text-[11px] text-muted">{entry.detail}</span>
+                </span>
+                <span className="flex-none text-[11px] text-muted">
+                  {relativeTime(entry.at)}
+                </span>
+                {entry.url ? (
+                  <ExternalButton href={entry.url} variant="ghost" size="sm">
+                    Open
+                  </ExternalButton>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         </Card>
-      ) : (
-        <Card>
-          <EmptyState
-            icon={<Terminal className="size-6" />}
-            title="Nothing shipped yet"
-            description="Commits, branches, pull requests and merges you make here show up in this list."
-          />
-        </Card>
-      )}
-
-      <p className="flex items-center justify-center gap-1.5 text-[11px] text-faint-foreground">
-        <ShieldAlert className="size-3.5" />
-        Developer Mode talks to GitHub from the server — the token never reaches this page.
-      </p>
+      ) : null}
     </>
   );
 }

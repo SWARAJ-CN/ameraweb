@@ -233,7 +233,7 @@ export function FileTree({
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
             placeholder="Filter files…"
-            className="ps-8 pe-8 text-xs"
+            className="w-full ps-8 pe-8 text-xs"
             aria-label="Filter repository files"
           />
           {filter ? (

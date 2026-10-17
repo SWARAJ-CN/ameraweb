@@ -8,7 +8,6 @@ import {
   GitCompareArrows,
   MessageCircle,
   Minus,
-  PencilLine,
   Plus,
   RotateCcw,
   Save,
@@ -130,9 +129,13 @@ export function CodeBrowser({
   const current = openFile ? staged[openFile.path] : undefined;
   const dirty = Boolean(openFile && draft !== openFile.original);
   const writable = Boolean(openFile && fileMeta && !fileMeta.binary && !fileMeta.tooLarge);
-  const diffPair = current
-    ? { before: current.original, after: current.deleted ? "" : current.content }
-    : null;
+  const diffPair = useMemo(
+    () =>
+      current
+        ? { before: current.original, after: current.deleted ? "" : current.content }
+        : null,
+    [current]
+  );
 
   const mode: ViewMode =
     (requestedMode === "edit" && !writable) || (requestedMode === "diff" && !diffPair)
@@ -419,7 +422,7 @@ export function CodeBrowser({
                 openFile
                   ? `${lineCount.toLocaleString()} lines · ${formatBytes(
                       fileMeta?.size ?? draft.length
-                    )} · committing to ${branch}`
+                    )}`
                   : "Pick a file to read, edit and ship it."
               }
               actions={
@@ -512,16 +515,6 @@ export function CodeBrowser({
                   >
                     <Download className="size-4" />
                   </Button>
-                  {writable && mode === "code" ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setRequestedMode("edit")}
-                    >
-                      <PencilLine className="size-4" />
-                      Edit
-                    </Button>
-                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -750,7 +743,13 @@ export function CodeBrowser({
         open={result !== null}
         onClose={() => setResult(null)}
         size="md"
-        title={result?.toMain ? "Pushed to main" : "Changes saved"}
+        title={
+          result
+            ? result.toMain
+              ? `Pushed to ${result.commit.branch}`
+              : `Committed to ${result.commit.branch}`
+            : ""
+        }
         description={
           result?.toMain
             ? "The code is live on GitHub. Notify the developer so they can pick it up."
