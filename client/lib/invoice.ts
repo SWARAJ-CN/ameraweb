@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from "./format";
+import { qrSvg, upiLink } from "./upi";
 import type { Sale, Settings } from "./types";
 
 const escapeHtml = (value: string): string =>
@@ -46,22 +47,35 @@ export function invoiceHtml(sale: Sale, settings: Settings): string {
     )
     .join("");
 
-  const lines: Array<[string, number]> = [
-    ["Product amount", sale.productAmount],
-    ["Custom amount", sale.customAmount],
-    ["Handling fee", sale.handlingFee],
-    ["Delivery fee", sale.deliveryFee],
+  // Fees first, then the amounts taken off the bill — the advance sits with the
+  // fees because it is money agreed alongside them, not a discount on them.
+  const lines: Array<[string, number, boolean]> = [
+    ["Product amount", sale.productAmount, false],
+    ["Custom amount", sale.customAmount, false],
+    ["Handling fee", sale.handlingFee, false],
+    ["Delivery fee", sale.deliveryFee, false],
+    ["Advance paid", sale.advancePaid, true],
+    ["Discount", sale.discount, true],
   ];
   const linesHtml = lines
     .filter(([, value]) => value)
     .map(
-      ([label, value]) =>
-        `<tr><td>${label}</td><td class="num">${formatCurrency(value, currency)}</td></tr>`
+      ([label, value, negative]) =>
+        `<tr${label === "Advance paid" ? ' class="advance"' : ""}><td>${label}</td>` +
+        `<td class="num">${negative ? "- " : ""}${formatCurrency(value, currency)}</td></tr>`
     )
     .join("");
 
-  const discountHtml = sale.discount
-    ? `<tr><td>Discount</td><td class="num">- ${formatCurrency(sale.discount, currency)}</td></tr>`
+  const payee = settings.upiEnabled ? settings.upiId.trim() : "";
+  const qr = payee
+    ? qrSvg(
+        upiLink({
+          upiId: payee,
+          shopName: settings.shopName,
+          amount: sale.total,
+          note: sale.billNumber,
+        })
+      )
     : "";
 
   return `<!doctype html>
@@ -89,6 +103,11 @@ export function invoiceHtml(sale: Sale, settings: Settings): string {
   .totals { margin-top: 16px; margin-inline-start: auto; width: 300px; }
   .totals tr td { border: none; padding: 4px 0; }
   .totals .grand td { border-top: 2px solid #1c1c22; padding-top: 10px; font-size: 16px; font-weight: 700; }
+  .totals .advance td { padding-top: 8px; color: #6b6b78; }
+
+  .qr { margin-top: 2px; }
+  .qr svg { display: block; }
+  .qr-title { margin-top: 6px; font-size: 12px; font-weight: 700; color: #1c1c22; }
   footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #ececf1; font-size: 12px; color: #6b6b78; display: flex; justify-content: space-between; gap: 16px; }
   @media print { body { padding: 0; } }
 </style>
@@ -119,10 +138,14 @@ export function invoiceHtml(sale: Sale, settings: Settings): string {
         ${customer ? `<div class="muted">${customer}</div>` : ""}
         ${sale.customerAddress.phone ? `<div class="muted">${escapeHtml(sale.customerAddress.phone)}</div>` : ""}
       </div>
-      <div>
+      ${
+        qr
+          ? `<div>
         <div class="label">Payment</div>
-        <div>${settings.upiId ? `UPI: ${escapeHtml(settings.upiId)}` : "—"}</div>
-      </div>
+        <div class="qr">${qr}<div class="qr-title">Scan to pay</div><div class="muted">${formatCurrency(sale.total, currency)} · ${escapeHtml(sale.billNumber)}</div></div>
+      </div>`
+          : ""
+      }
     </div>
 
     ${
@@ -137,7 +160,6 @@ export function invoiceHtml(sale: Sale, settings: Settings): string {
     <table class="totals">
       <tbody>
         ${linesHtml}
-        ${discountHtml}
         <tr class="grand"><td>Total</td><td class="num">${formatCurrency(sale.total, currency)}</td></tr>
       </tbody>
     </table>

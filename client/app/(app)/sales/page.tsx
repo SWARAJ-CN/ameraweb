@@ -107,7 +107,17 @@ export default function SalesPage() {
     downloadCsv(
       `amare-sales-${new Date().toISOString().slice(0, 10)}.csv`,
       [
-        ["Bill", "Date", "Customer", "Type", "Items", "Product amount", "Discount", "Total"],
+        [
+          "Bill",
+          "Date",
+          "Customer",
+          "Type",
+          "Items",
+          "Product amount",
+          "Discount",
+          "Total",
+          "Advance paid",
+        ],
         ...filtered.map((sale) => [
           sale.billNumber,
           formatDate(sale.date),
@@ -117,6 +127,7 @@ export default function SalesPage() {
           sale.productAmount,
           sale.discount,
           sale.total,
+          sale.advancePaid,
         ]),
       ]
     );

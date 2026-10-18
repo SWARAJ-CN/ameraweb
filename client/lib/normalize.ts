@@ -77,6 +77,7 @@ export function normalizeSale(raw: unknown): Sale {
     handlingFee: num(value.handlingFee),
     deliveryFee: num(value.deliveryFee),
     discount: num(value.discount),
+    advancePaid: num(value.advancePaid),
     productAmount: num(value.productAmount),
     total: num(value.total),
     date: iso(value.saleDate ?? value.date),
@@ -148,6 +149,7 @@ export function normalizeSettings(raw: unknown): Settings {
     gstin: pick("gstin", ""),
     whatsapp: pick("whatsapp", ""),
     upiId: pick("upiId", ""),
+    upiEnabled: value.upiEnabled === undefined || value.upiEnabled === null ? true : Boolean(value.upiEnabled),
     currency: pick("currency", DEFAULT_SETTINGS.currency),
     dateFormat: pick("dateFormat", DEFAULT_SETTINGS.dateFormat),
     invoicePrefix: pick("invoicePrefix", DEFAULT_SETTINGS.invoicePrefix),
@@ -170,6 +172,7 @@ export interface SaleDraft {
   handlingFee: number;
   deliveryFee: number;
   discount: number;
+  advancePaid: number;
   productAmount: number;
   total: number;
   date: string;
@@ -191,6 +194,7 @@ export function saleToPayload(draft: SaleDraft): Record<string, unknown> {
     handlingFee: num(draft.handlingFee),
     deliveryFee: num(draft.deliveryFee),
     discount: num(draft.discount),
+    advancePaid: num(draft.advancePaid),
     productAmount: num(draft.productAmount),
     total: num(draft.total),
     saleDate: new Date(draft.date).toISOString(),

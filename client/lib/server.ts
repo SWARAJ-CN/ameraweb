@@ -1,4 +1,5 @@
 import { API_URL } from "./api";
+import { recordRequest } from "./reqlog";
 
 export interface EndpointProbe {
   /** HTTP status, or null when the request never completed. */
@@ -88,6 +89,14 @@ export async function probeEndpoint(
       ? true
       : response.status >= 200 && response.status < 400;
 
+    recordRequest({
+      method: spec.method,
+      path: spec.path,
+      status: response.status,
+      durationMs: latencyMs,
+      ...(ok ? {} : { message: "Unexpected status" }),
+    });
+
     return {
       status: response.status,
       ok,
@@ -98,14 +107,24 @@ export async function probeEndpoint(
   } catch (error) {
     const latencyMs = Math.round(performance.now() - started);
     const aborted = error instanceof DOMException && error.name === "AbortError";
+    const message = aborted
+      ? `Timed out after ${Math.round(timeoutMs / 1000)}s — the free tier may be waking up.`
+      : "Could not reach the server. Check your connection.";
+
+    recordRequest({
+      method: spec.method,
+      path: spec.path,
+      status: null,
+      durationMs: latencyMs,
+      message,
+    });
+
     return {
       status: null,
       ok: false,
       latencyMs,
       body: "",
-      error: aborted
-        ? `Timed out after ${Math.round(timeoutMs / 1000)}s — the free tier may be waking up.`
-        : "Could not reach the server. Check your connection.",
+      error: message,
       checkedAt: new Date().toISOString(),
     };
   } finally {

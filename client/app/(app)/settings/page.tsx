@@ -9,14 +9,20 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Notice, Skeleton } from "@/components/ui/Feedback";
 import { PageHeader } from "@/components/ui/Controls";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
+import { Switch } from "@/components/ui/Switch";
 import { BrandColorPicker } from "@/components/features/BrandColorPicker";
 import { applyBrand } from "@/lib/brand";
 import { invoiceHtml, printInvoice } from "@/lib/invoice";
+import { qrSvg, upiLink } from "@/lib/upi";
 import { EMPTY_ADDRESS, type Sale, type Settings } from "@/lib/types";
 
 const BACKGROUND_STYLES = ["light", "dark", "soft", "gradient"];
 const CURRENCIES = ["INR", "USD", "EUR", "GBP", "AED", "SAR", "AUD", "CAD"];
 const DATE_FORMATS = ["DD MMM YYYY", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"];
+
+/** The invoice frame is as tall as its content, within these bounds. */
+const PREVIEW_MIN_HEIGHT = 420;
+const PREVIEW_MAX_HEIGHT = 900;
 
 const SAMPLE_SALE: Sale = {
   id: "preview",
@@ -40,6 +46,7 @@ const SAMPLE_SALE: Sale = {
   handlingFee: 50,
   deliveryFee: 80,
   discount: 100,
+  advancePaid: 500,
   productAmount: 1790,
   total: 1820,
   date: new Date().toISOString(),
@@ -52,6 +59,7 @@ export default function SettingsPage() {
 
   const [draft, setDraft] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [previewHeight, setPreviewHeight] = useState(PREVIEW_MIN_HEIGHT);
 
   const current = draft ?? settings;
 
@@ -72,13 +80,27 @@ export default function SettingsPage() {
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) =>
     setDraft({ ...current, [key]: value });
 
+  // The same link and QR the sample bill prints, so the preview is truthful.
+  const upiPreviewLink = useMemo(
+    () =>
+      current.upiEnabled && current.upiId.trim()
+        ? upiLink({
+            upiId: current.upiId,
+            shopName: current.shopName,
+            amount: SAMPLE_SALE.total,
+            note: SAMPLE_SALE.billNumber,
+          })
+        : "",
+    [current.upiEnabled, current.upiId, current.shopName]
+  );
+  const upiPreviewQr = useMemo(() => qrSvg(upiPreviewLink, 4), [upiPreviewLink]);
+
   const dirty = useMemo(
     () => draft !== null && JSON.stringify(draft) !== JSON.stringify(settings),
     [draft, settings]
   );
 
   const previewHtml = useMemo(() => invoiceHtml(SAMPLE_SALE, current), [current]);
-
   const save = async () => {
     setSaving(true);
     try {
@@ -232,14 +254,59 @@ export default function SettingsPage() {
                   placeholder="32ABCDE1234F1Z5"
                 />
               </Field>
-              <Field label="UPI ID" htmlFor="set-upi" hint="Payee VPA used for payment QR codes.">
-                <Input
-                  id="set-upi"
-                  value={current.upiId}
-                  onChange={(event) => set("upiId", event.target.value)}
-                  placeholder="amarehandmades@ybl"
-                />
-              </Field>
+              <div className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:col-span-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">UPI payments</p>
+                    <p className="text-xs text-muted">
+                      Show your UPI id and a payment QR on every bill.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-muted">
+                      {current.upiEnabled ? "On" : "Off"}
+                    </span>
+                    <Switch
+                      checked={current.upiEnabled}
+                      onChange={(next) => set("upiEnabled", next)}
+                      aria-label="Show UPI details on bills"
+                    />
+                  </div>
+                </div>
+
+                <Field label="UPI ID" htmlFor="set-upi" hint="Payee VPA used for payment QR codes.">
+                  <Input
+                    id="set-upi"
+                    value={current.upiId}
+                    onChange={(event) => set("upiId", event.target.value)}
+                    placeholder="amarehandmades@ybl"
+                  />
+                </Field>
+
+                {!current.upiEnabled ? (
+                  <p className="text-xs text-muted">
+                    UPI details and the payment QR are hidden on bills.
+                  </p>
+                ) : upiPreviewQr ? (
+                  <div className="flex items-center gap-3 rounded-lg border border-border bg-white p-3">
+                    <div
+                      className="flex-none leading-none"
+                      // Built by qrSvg() from the shop's own UPI id.
+                      dangerouslySetInnerHTML={{ __html: upiPreviewQr }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-foreground">Scan to pay</p>
+                      <p className="text-xs break-all text-muted-foreground">
+                        {upiPreviewLink}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted">
+                    Add a UPI ID to generate the payment QR.
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -360,8 +427,25 @@ export default function SettingsPage() {
             <iframe
               title="Invoice preview"
               srcDoc={previewHtml}
-              className="h-[42rem] w-full rounded-b-2xl border-0 bg-white"
-              sandbox=""
+              onLoad={(event) => {
+                const doc = event.currentTarget.contentDocument;
+                if (!doc?.body) return;
+                // Read the sheet itself: documentElement.scrollHeight would
+                // never shrink below the current frame height.
+                const sheet = doc.querySelector(".sheet");
+                const styles = doc.defaultView?.getComputedStyle(doc.body);
+                const padding =
+                  (parseFloat(styles?.paddingTop ?? "0") || 0) +
+                  (parseFloat(styles?.paddingBottom ?? "0") || 0);
+                const content = sheet?.scrollHeight ?? doc.body.scrollHeight;
+                const height = Math.ceil(content + padding);
+                setPreviewHeight(
+                  Math.min(PREVIEW_MAX_HEIGHT, Math.max(PREVIEW_MIN_HEIGHT, height))
+                );
+              }}
+              style={{ height: previewHeight }}
+              className="w-full rounded-b-2xl border-0 bg-white"
+              sandbox="allow-same-origin"
             />
           </CardContent>
         </Card>

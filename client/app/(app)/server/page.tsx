@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Notice, Skeleton } from "@/components/ui/Feedback";
 import { PageHeader, SegmentedControl } from "@/components/ui/Controls";
+import { ServerLog } from "@/components/features/ServerLog";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { probeEndpoint, SERVER_ENDPOINTS, type EndpointProbe } from "@/lib/server";
 
@@ -315,6 +316,8 @@ export default function ServerPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ServerLog />
     </>
   );
 }

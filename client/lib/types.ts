@@ -36,6 +36,8 @@ export interface Sale {
   handlingFee: number;
   deliveryFee: number;
   discount: number;
+  /** Amount already collected from the customer. Does not reduce `total`. */
+  advancePaid: number;
   productAmount: number;
   total: number;
   /** ISO date the sale is booked against (backend `saleDate`). */
@@ -93,6 +95,8 @@ export interface Settings {
   gstin: string;
   whatsapp: string;
   upiId: string;
+  /** When false, the UPI id and its payment QR are left off bills. */
+  upiEnabled: boolean;
   currency: string;
   dateFormat: string;
   invoicePrefix: string;
@@ -141,6 +145,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gstin: "",
   whatsapp: "",
   upiId: "",
+  upiEnabled: true,
   currency: "INR",
   dateFormat: "DD MMM YYYY",
   invoicePrefix: "AM-",

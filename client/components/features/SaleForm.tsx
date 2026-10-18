@@ -56,6 +56,7 @@ export function SaleForm({
   const [handlingFee, setHandlingFee] = useState(() => String(sale?.handlingFee ?? 0));
   const [deliveryFee, setDeliveryFee] = useState(() => String(sale?.deliveryFee ?? 0));
   const [discount, setDiscount] = useState(() => String(sale?.discount ?? 0));
+  const [advancePaid, setAdvancePaid] = useState(() => String(sale?.advancePaid ?? 0));
   const [showAddress, setShowAddress] = useState(() =>
     Boolean(
       sale &&
@@ -102,6 +103,7 @@ export function SaleForm({
         handlingFee: num(handlingFee),
         deliveryFee: num(deliveryFee),
         discount: num(discount),
+        advancePaid: Math.max(0, num(advancePaid)),
         productAmount: totals.productAmount,
         total: totals.total,
         date: (parseDateInput(date) ?? new Date()).toISOString(),
@@ -351,7 +353,7 @@ export function SaleForm({
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Field label="Custom amount" htmlFor="fee-custom">
             <Input
               id="fee-custom"
@@ -380,6 +382,17 @@ export function SaleForm({
               step="0.01"
               value={deliveryFee}
               onChange={(event) => setDeliveryFee(event.target.value)}
+            />
+          </Field>
+          <Field label="Advance paid" htmlFor="sale-advance">
+            <Input
+              id="sale-advance"
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={advancePaid}
+              onChange={(event) => setAdvancePaid(event.target.value)}
             />
           </Field>
           <Field label="Discount" htmlFor="fee-discount">

@@ -147,6 +147,12 @@ export function SaleDetail({ sale, settings, onClose, onEdit }: SaleDetailProps)
             {sale.deliveryFee ? (
               <Row label="Delivery fee" value={formatCurrency(sale.deliveryFee, currency)} />
             ) : null}
+            {sale.advancePaid ? (
+              <Row
+                label="Advance paid"
+                value={`- ${formatCurrency(sale.advancePaid, currency)}`}
+              />
+            ) : null}
             {sale.discount ? (
               <Row
                 label="Discount"

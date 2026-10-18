@@ -6,6 +6,8 @@
  * `backend/docs/client-api-guide.html`.
  */
 
+import { recordRequest } from "./reqlog";
+
 export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "https://amera-backend.onrender.com"
 ).replace(/\/+$/, "");
@@ -74,6 +76,23 @@ interface RequestOptions {
   timeoutMs?: number;
 }
 
+/** Feeds the Server page's live log. Never throws, so logging cannot break a call. */
+function record(
+  method: string,
+  path: string,
+  status: number | null,
+  startedAt: number,
+  message?: string
+): void {
+  recordRequest({
+    method,
+    path,
+    status,
+    durationMs: Math.round((performance.now() - startedAt) * 10) / 10,
+    ...(message ? { message } : {}),
+  });
+}
+
 async function parseBody(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) return null;
@@ -99,7 +118,9 @@ async function request<T>(
   path: string,
   { body, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS }: RequestOptions = {}
 ): Promise<T> {
-  const url = `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const recordPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${API_URL}${recordPath}`;
+  const startedAt = performance.now();
 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
@@ -141,21 +162,23 @@ async function request<T>(
   if (!response) {
     const aborted =
       lastError instanceof DOMException && lastError.name === "AbortError";
-    throw new ApiError(
-      aborted
-        ? `The server took longer than ${Math.round(timeoutMs / 1000)}s to respond.`
-        : "Could not reach the server. Check your connection and try again.",
-      0
-    );
+    const message = aborted
+      ? `The server took longer than ${Math.round(timeoutMs / 1000)}s to respond.`
+      : "Could not reach the server. Check your connection and try again.";
+    record(method, recordPath, null, startedAt, message);
+    throw new ApiError(message, 0);
   }
 
   const payload = await parseBody(response);
 
   if (!response.ok) {
+    const message = errorMessage(payload, response.status);
+    record(method, recordPath, response.status, startedAt, message);
     if (response.status === 401 && auth) unauthorizedHandler?.();
-    throw new ApiError(errorMessage(payload, response.status), response.status);
+    throw new ApiError(message, response.status);
   }
 
+  record(method, recordPath, response.status, startedAt);
   return payload as T;
 }
 
@@ -183,6 +206,7 @@ export async function graphql<T>(
   const token = getToken();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const startedAt = performance.now();
 
   let response: Response;
   try {
@@ -198,10 +222,11 @@ export async function graphql<T>(
     });
   } catch (error) {
     const aborted = error instanceof DOMException && error.name === "AbortError";
-    throw new ApiError(
-      aborted ? "The server took too long to respond." : "Could not reach the server.",
-      0
-    );
+    const message = aborted
+      ? "The server took too long to respond."
+      : "Could not reach the server.";
+    record("POST", "/graphql", null, startedAt, message);
+    throw new ApiError(message, 0);
   } finally {
     clearTimeout(timer);
   }
@@ -209,13 +234,21 @@ export async function graphql<T>(
   const payload = (await parseBody(response)) as GraphQLResponse<T> | null;
 
   if (!response.ok) {
-    throw new ApiError(errorMessage(payload, response.status), response.status);
+    const message = errorMessage(payload, response.status);
+    record("POST", "/graphql", response.status, startedAt, message);
+    throw new ApiError(message, response.status);
   }
   if (payload?.errors?.length) {
     const message = payload.errors[0]?.message ?? "GraphQL request failed.";
+    record("POST", "/graphql", 400, startedAt, message);
     if (/not authenticated/i.test(message)) unauthorizedHandler?.();
     throw new ApiError(message, 400);
   }
-  if (!payload?.data) throw new ApiError("The server returned no data.", 500);
+  if (!payload?.data) {
+    record("POST", "/graphql", 500, startedAt, "The server returned no data.");
+    throw new ApiError("The server returned no data.", 500);
+  }
+
+  record("POST", "/graphql", response.status, startedAt);
   return payload.data;
 }

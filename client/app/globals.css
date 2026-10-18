@@ -210,6 +210,17 @@ button,
 }
 
 /* ------------------------------------------------------------------ *
+ * Server — live log
+ *
+ * The log scrolls inside its own box. Without this, reaching either end
+ * chains the scroll to the page behind it, which makes the panel feel like
+ * it is jumping around while lines stream in.
+ * ------------------------------------------------------------------ */
+.amare-log {
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------------------------------------------ *
  * Developer Mode — code viewer
  *
  * highlight.js emits semantic class names (`.hljs-keyword` …). The palette
