@@ -405,10 +405,12 @@ export function VoiceCommand() {
             </button>
           </div>
 
-          <VoiceMeter
-            active={listening}
-            className="h-10 w-full rounded-lg bg-surface-muted text-accent"
-          />
+          {listening ? (
+            <VoiceMeter
+              active
+              className="h-10 w-full rounded-lg bg-surface-muted text-accent"
+            />
+          ) : null}
 
           <p
             aria-live="polite"

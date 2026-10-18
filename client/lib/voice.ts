@@ -5,14 +5,17 @@ import { NAV_ITEMS } from "@/components/layout/nav-config";
  *
  * Speech recognition gives us loose text — "go to the sales page", "sales",
  * "show me products" — so matching is deliberately forgiving but must not fire
- * on ordinary conversation. A command is accepted only when it is either
+ * on ordinary conversation. A phrase only counts when it is either
  *
  *   1. opened with a verb ("go to…", "open…", "show me…"), where the page name
  *      may sit anywhere in the sentence, or
  *   2. the whole utterance, once filler words are dropped ("the sales page",
  *      "products please").
  *
- * The longest matching phrase wins, and ties go to whichever appears first.
+ * Within that rule the match is scored rather than filtered, so a mis-heard
+ * spelling still lands on the right page: an exact hit scores 1, and a near
+ * miss scores by how far off it was. Callers act on a high score and offer the
+ * rest as suggestions.
  */
 
 export type VoiceThemeMode = "light" | "dark" | "system";
@@ -208,6 +211,20 @@ export const AUTO_RUN_SCORE = 0.8;
 const SUGGEST_SCORE = 0.55;
 
 /**
+ * How far apart two words may be and still count as the same word.
+ *
+ * Proportional distance is the wrong yardstick here: "stop" and "stock" are 60%
+ * alike yet mean nothing to each other, while "expen" and "expenses" are only
+ * 75% alike and plainly the same word. So the budget scales with length, and
+ * short words — where a single stray letter changes everything — get almost
+ * none.
+ */
+function allowWithin(a: string, b: string): number {
+  if (Math.min(a.length, b.length) <= 4) return 1;
+  return Math.max(a.length, b.length) <= 8 ? 2 : 3;
+}
+
+/**
  * How close an utterance is to `phrase`.
  *
  * `anywhere` is true when the sentence opens with a verb, which lets the phrase
@@ -225,13 +242,23 @@ function fuzzyScore(phrase: string[], words: string[], anywhere: boolean): numbe
   for (let i = 0; i <= last; i += 1) {
     let distance = 0;
     let longest = 0;
+    let withinBudget = true;
     for (let j = 0; j < phrase.length; j += 1) {
-      distance += editDistance(words[i + j], phrase[j]);
-      longest += Math.max(words[i + j].length, phrase[j].length);
+      const heard = words[i + j];
+      const wanted = phrase[j];
+      const gap = editDistance(heard, wanted);
+      if (gap > allowWithin(heard, wanted)) {
+        withinBudget = false;
+        break;
+      }
+      distance += gap;
+      longest += Math.max(heard.length, wanted.length);
     }
-    best = Math.max(best, longest === 0 ? 1 : 1 - distance / longest);
+    if (withinBudget && longest > 0) best = Math.max(best, 1 - distance / longest);
   }
-  return best;
+  // Rounded so a near-miss lands on the same value the panel prints, and so the
+  // auto-run cut-off is not a coin toss on floating-point noise.
+  return Math.round(best * 1000) / 1000;
 }
 
 function scoreCandidate(
@@ -288,7 +315,14 @@ export function suggestVoiceCommands(transcript: string, limit = 4): VoiceMatch[
   }
 
   return [...best.values()]
-    .sort((a, b) => b.score - a.score || a.phrase.length - b.phrase.length)
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        // Same confidence: the shorter, more specific phrase wins, then
+        // alphabetical order keeps the list stable between runs.
+        a.phrase.length - b.phrase.length ||
+        a.phrase.localeCompare(b.phrase)
+    )
     .slice(0, limit);
 }
 
