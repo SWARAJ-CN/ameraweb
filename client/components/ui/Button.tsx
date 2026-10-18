@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type ButtonHTMLAttributes, type MouseEvent, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, type ButtonHTMLAttributes, type MouseEvent, type ReactNode } from "react";
 import Link from "next/link";
 import type { LinkProps } from "next/link";
 import { Loader2 } from "lucide-react";
@@ -61,13 +61,32 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     disabled,
     children,
     onClick,
+    title,
     ...props
   },
   ref
 ) {
+  const element = useRef<HTMLButtonElement | null>(null);
+
+  /**
+   * React Aria filters DOM props and drops `title`, so a `title` passed to a
+   * button would silently never reach the DOM and no tooltip would appear.
+   * Setting it on the node restores the hover hint on every icon button.
+   */
+  useEffect(() => {
+    const node = element.current;
+    if (!node) return;
+    if (title) node.setAttribute("title", title);
+    else node.removeAttribute("title");
+  }, [title]);
+
   return (
     <HeroButton
-      ref={ref}
+      ref={(node: HTMLButtonElement | null) => {
+        element.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) (ref as { current: HTMLButtonElement | null }).current = node;
+      }}
       variant={HERO_VARIANT[variant]}
       size={HERO_SIZE[size]}
       isIconOnly={size === "icon"}
