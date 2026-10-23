@@ -20,6 +20,7 @@ import { PageHeader, SegmentedControl } from "@/components/ui/Controls";
 import { ServerLog } from "@/components/features/ServerLog";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { probeEndpoint, SERVER_ENDPOINTS, type EndpointProbe } from "@/lib/server";
+import { SecureGate } from "@/components/features/dev/SecureGate";
 
 const INTERVALS = [
   { value: "0", label: "Off" },
@@ -66,6 +67,17 @@ const OVERALL: Record<
 };
 
 export default function ServerPage() {
+  return (
+    <SecureGate
+      areaName="Server options"
+      blurb="Live backend health, endpoint probes, latency history and server logs for the whole admin."
+    >
+      <ServerContent />
+    </SecureGate>
+  );
+}
+
+function ServerContent() {
   const [probes, setProbes] = useState<Record<string, EndpointProbe>>({});
   const [history, setHistory] = useState<number[]>([]);
   const [lastSweepAt, setLastSweepAt] = useState<string | null>(null);

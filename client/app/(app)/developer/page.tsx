@@ -33,6 +33,7 @@ import { RepoBar } from "@/components/features/dev/RepoBar";
 import { DevTabs } from "@/components/features/dev/DevTabs";
 import { ExternalButton } from "@/components/features/dev/DevBits";
 import { activityId, whatsappLink, type DevActivity } from "@/components/features/dev/dev-utils";
+import { SecureGate } from "@/components/features/dev/SecureGate";
 
 type Section = "code" | "branches" | "pulls" | "commits" | "actions";
 
@@ -49,6 +50,17 @@ function reason(value: unknown): string {
 }
 
 export default function DeveloperPage() {
+  return (
+    <SecureGate
+      areaName="Developer mode"
+      blurb="Full write access to the repository — code edits, branches, pulls, commits and GitHub Actions, straight from the admin."
+    >
+      <DeveloperContent />
+    </SecureGate>
+  );
+}
+
+function DeveloperContent() {
   const { success: toastOk, error: toastErr } = useToast();
 
   const [repo, setRepo] = useState<DevRepo | null>(null);
