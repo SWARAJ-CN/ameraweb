@@ -2,7 +2,9 @@ import {
   Calculator,
   Code2,
   Database,
+  Image,
   LayoutDashboard,
+  Music,
   Package,
   Server,
   Settings,
@@ -68,6 +70,18 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "Tools",
     items: [
+      {
+        href: "/music",
+        label: "Music",
+        icon: Music,
+        description: "Listen while you work",
+      },
+      {
+        href: "/public-apis",
+        label: "Tools",
+        icon: Image,
+        description: "Stock photos & bg removal",
+      },
       {
         href: "/calculations",
         label: "Calculator",
