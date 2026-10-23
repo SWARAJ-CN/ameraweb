@@ -1,3 +1,15 @@
+/** The locale formatters follow — Indian English by default, switched by I18nProvider. */
+let formatLocale = "en-IN";
+
+export function setFormatLocale(locale: string): void {
+  const candidate = locale.trim();
+  formatLocale = candidate || "en-IN";
+}
+
+export function getFormatLocale(): string {
+  return formatLocale;
+}
+
 const CURRENCY_SYMBOLS: Record<string, string> = {
   INR: "₹",
   USD: "$",
@@ -19,7 +31,7 @@ export function formatCurrency(value: number, currency = "INR"): string {
   const amount = Number.isFinite(value) ? value : 0;
   const code = (currency || "INR").toUpperCase();
   try {
-    return new Intl.NumberFormat("en-IN", {
+    return new Intl.NumberFormat(formatLocale, {
       style: "currency",
       currency: code,
       maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
@@ -37,7 +49,7 @@ export function formatCurrencyCompact(value: number, currency = "INR"): string {
 
 export function formatNumber(value: number, maximumFractionDigits = 0): string {
   const amount = Number.isFinite(value) ? value : 0;
-  return new Intl.NumberFormat("en-IN", { maximumFractionDigits }).format(amount);
+  return new Intl.NumberFormat(formatLocale, { maximumFractionDigits }).format(amount);
 }
 
 /** Compact number, e.g. 1250 -> 1.3K, 4200000 -> 4.2M. */
@@ -60,7 +72,7 @@ export function formatDate(
 ): string {
   const date = typeof iso === "string" ? new Date(iso) : iso;
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-IN", options).format(date);
+  return new Intl.DateTimeFormat(formatLocale, options).format(date);
 }
 
 export function formatDateTime(iso: string | Date): string {
@@ -94,7 +106,7 @@ export function relativeTime(iso: string | Date): string {
     ["hour", 3_600_000],
     ["minute", 60_000],
   ];
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const formatter = new Intl.RelativeTimeFormat(formatLocale, { numeric: "auto" });
   for (const [unit, ms] of units) {
     if (abs >= ms || unit === "minute") {
       return formatter.format(Math.round(diff / ms), unit);

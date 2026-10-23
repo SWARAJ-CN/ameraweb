@@ -421,13 +421,34 @@ export const VOICE_LANGUAGES: VoiceLanguage[] = [
 /** The shop is Indian, so Indian English is the sensible starting point. */
 export const DEFAULT_VOICE_LANGUAGE = "en-IN";
 
+/**
+ * The language the assistant listens and speaks in — the language the reader
+ * picked, or the app's own language when they chose to follow it.
+ */
+export function voiceLocale(language: string, appLocale: string): string {
+  const candidate = language.trim() || appLocale.trim();
+  return candidate || DEFAULT_VOICE_LANGUAGE;
+}
+
+/**
+ * The BCP-47 accent for the recogniser and the speaking voice. An unpicked
+ * language falls back to the accent the app's own locale points at.
+ */
+export function voiceAccent(language: string, speechAccent: string): string {
+  const candidate = language.trim() || speechAccent.trim();
+  return candidate || DEFAULT_VOICE_LANGUAGE;
+}
+
 const LANGUAGE_KEY = "amare.voice.language";
 const LANGUAGE_EVENT = "amare:voice-language";
 
 export function readVoiceLanguage(): string {
   try {
     const stored = window.localStorage.getItem(LANGUAGE_KEY);
-    if (stored && VOICE_LANGUAGES.some((entry) => entry.value === stored)) return stored;
+    // "" means "follow the app's language", so it is a valid pick too.
+    if (stored !== null && (stored === "" || VOICE_LANGUAGES.some((entry) => entry.value === stored))) {
+      return stored;
+    }
   } catch {
     /* storage can be unavailable in private mode */
   }
