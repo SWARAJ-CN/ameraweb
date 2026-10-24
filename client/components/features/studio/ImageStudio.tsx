@@ -11,22 +11,16 @@ import {
   Download,
   Film,
   Image as ImageIconD,
-  Music2,
   Palette,
-  Pause,
-  Play,
   RotateCcw,
   Scan,
-  Search,
   SlidersHorizontal,
   Sparkles,
   X,
 } from "lucide-react";
-import type { Song } from "@/lib/saavn";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { SearchInput } from "@/components/ui/Controls";
-import { EmptyState, Notice, Spinner } from "@/components/ui/Feedback";
+import { Notice, Spinner } from "@/components/ui/Feedback";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -203,8 +197,6 @@ export function ImageStudio({
 
   // Story video state
   const [durationSec, setDurationSec] = useState(30);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-  const [clipStart, setClipStart] = useState(0);
   const [videoState, setVideoState] = useState<"idle" | "recording" | "done" | "error">("idle");
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -409,7 +401,7 @@ export function ImageStudio({
   const videoMime = useMemo(() => {
     if (typeof MediaRecorder === "undefined") return "";
     return (
-      ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(
+      ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(
         (option) => MediaRecorder.isTypeSupported(option)
       ) ?? ""
     );
@@ -441,51 +433,7 @@ export function ImageStudio({
       drawFrame(img, context, width, height, 1.02);
 
       const canvasStream = canvas.captureStream(24);
-      const tracks: MediaStreamTrack[] = [...canvasStream.getVideoTracks()];
-
-      if (selectedSong?.streamUrl) {
-        const response = await fetch(selectedSong.streamUrl);
-        if (!response.ok) {
-          throw new Error(`The song's audio couldn't be fetched (HTTP ${response.status}).`);
-        }
-        const AudioCtx = window.AudioContext;
-        if (!AudioCtx) throw new Error("Web Audio unavailable in this browser.");
-        const audioContext = new AudioCtx();
-        try {
-          const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
-          const destination = audioContext.createMediaStreamDestination();
-          const gain = audioContext.createGain();
-          gain.gain.value = 0.95;
-          // Schedule the chosen song *part* (clipStart → clipStart + length),
-          // looping the tail if the part is shorter than the video.
-          let cursor = audioContext.currentTime + 0.05;
-          let position = Math.min(
-            Math.max(0, clipStart),
-            Math.max(0, buffer.duration - 0.5)
-          );
-          let guards = 0;
-          while (cursor < audioContext.currentTime + durationSec && guards < 60) {
-            const remaining = audioContext.currentTime + durationSec - cursor;
-            const available = buffer.duration - position;
-            const span = Math.min(available, remaining);
-            if (span <= 0.05) break;
-            const node = audioContext.createBufferSource();
-            node.buffer = buffer;
-            node.connect(gain);
-            node.start(cursor, position, span);
-            cursor += span;
-            if (available <= span) position = 0; // loop back to the top of the song
-            guards += 1;
-          }
-          gain.connect(destination);
-          tracks.push(...destination.stream.getAudioTracks());
-        } finally {
-          void audioContext.close();
-        }
-      }
-
-      const combined = new MediaStream(tracks);
-      const recorder = new MediaRecorder(combined, { mimeType: videoMime });
+      const recorder = new MediaRecorder(canvasStream, { mimeType: videoMime });
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.push(event.data);
@@ -525,16 +473,12 @@ export function ImageStudio({
     } finally {
       recordingRef.current = false;
     }
-  }, [clipStart, durationSec, drawFrame, loadSource, selectedSong, source, videoMime]);
+  }, [durationSec, drawFrame, loadSource, source, videoMime]);
 
   const recordLabel =
     videoState === "recording"
       ? `Recording ${Math.round(videoProgress * durationSec)}s / ${durationSec}s…`
       : `Render ${durationSec}s story`;
-
-  const clipEnd = selectedSong
-    ? Math.min(Math.max(selectedSong.duration, 1), clipStart + durationSec)
-    : 0;
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -846,20 +790,10 @@ export function ImageStudio({
         <Card>
           <CardHeader
             title="Instagram story studio"
-            description={`9:16 (${STORY_VIDEO[0]}×${STORY_VIDEO[1]}) — the edited photo + a song part from the catalogue become a downloadable story video.`}
+            description={`9:16 (${STORY_VIDEO[0]}×${STORY_VIDEO[1]}) — the edited photo becomes a downloadable story video.`}
             actions={videoState === "recording" ? <Spinner className="size-4" /> : null}
           />
           <CardContent className="flex flex-col gap-4">
-            <SongPicker
-              selected={selectedSong}
-              onSelect={(song) => {
-                setSelectedSong(song);
-                setClipStart(0);
-              }}
-              clipStart={clipStart}
-              onClipStart={setClipStart}
-              clipLength={durationSec}
-            />
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Length
@@ -880,12 +814,6 @@ export function ImageStudio({
                   {seconds}s
                 </button>
               ))}
-              {selectedSong ? (
-                <span className="rounded-field bg-accent-soft px-2.5 py-1 text-[11px] font-semibold text-brand tabular-nums">
-                  song part {formatSeconds(clipStart)} → {formatSeconds(clipEnd)} of{" "}
-                  {formatSeconds(selectedSong.duration)}
-                </span>
-              ) : null}
               <span
                 title="Instagram story ratio"
                 className="ms-auto rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-brand"
@@ -953,8 +881,7 @@ export function ImageStudio({
               </Notice>
             ) : null}
             <p className="text-[11px] text-faint-foreground">
-              Renders fully in your browser as WebM (VP9 + Opus) · the song part
-              loops seamlessly if the selected span is shorter than the clip.
+              Renders fully in your browser as a silent WebM (VP9) story video.
             </p>
           </CardContent>
         </Card>
@@ -1001,299 +928,3 @@ function SliderRow({
   );
 }
 
-function formatSeconds(value: number): string {
-  const whole = Math.max(0, Math.floor(value));
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
-}
-
-/* ================================================================== *
- * Song picker + preview + part selection
- * ================================================================== */
-
-function SongPicker({
-  selected,
-  onSelect,
-  clipStart,
-  onClipStart,
-  clipLength,
-}: {
-  selected: Song | null;
-  onSelect: (song: Song | null) => void;
-  clipStart: number;
-  onClipStart: (value: number) => void;
-  clipLength: number;
-}) {
-  const [input, setInput] = useState("");
-  const [term, setTerm] = useState("tamil songs");
-  const [results, setResults] = useState<Song[]>([]);
-  const [loadedTerm, setLoadedTerm] = useState("tamil songs");
-  const loading = loadedTerm !== term;
-  const [error, setError] = useState<string | null>(null);
-
-  const previewRef = useRef<HTMLAudioElement | null>(null);
-  const [previewing, setPreviewing] = useState(false);
-  const [previewTime, setPreviewTime] = useState(0);
-  const [previewDuration, setPreviewDuration] = useState(0);
-
-  useEffect(() => {
-    const value = input.trim();
-    if (value.length < 2) return;
-    const timer = setTimeout(() => setTerm(value), 450);
-    return () => clearTimeout(timer);
-  }, [input]);
-
-  // Stop the preview when the selection changes.
-  const choose = (song: Song | null) => {
-    const audio = previewRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-    setPreviewing(false);
-    setPreviewTime(0);
-    setPreviewDuration(0);
-    onSelect(song);
-  };
-
-  useEffect(
-    () => () => {
-      previewRef.current?.pause();
-    },
-    []
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(
-      `/api/music/search?${new URLSearchParams({ q: term, page: "1", limit: "12" })}`,
-      { signal: controller.signal }
-    )
-      .then(async (response) => {
-        const payload = (await response.json().catch(() => null)) as
-          | { songs?: Song[]; error?: string }
-          | null;
-        if (!response.ok) throw new Error(payload?.error ?? "Search failed.");
-        return payload;
-      })
-      .then((payload) => {
-        setResults(payload?.songs ?? []);
-        setLoadedTerm(term);
-      })
-      .catch((cause: unknown) => {
-        if (cause instanceof Error && cause.name === "AbortError") return;
-        setError(cause instanceof Error ? cause.message : "Search failed.");
-        setLoadedTerm(term);
-      });
-    return () => controller.abort();
-  }, [term]);
-
-  const togglePreview = () => {
-    const audio = previewRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play().catch(() => {});
-    } else {
-      audio.pause();
-    }
-  };
-
-  const songDuration = selected?.duration || previewDuration || clipLength;
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Pick a song from the catalogue
-        </p>
-        {selected ? (
-          <button
-            type="button"
-            onClick={() => choose(null)}
-            className="text-[11px] font-semibold text-muted transition-colors hover:text-foreground"
-          >
-            Unpick
-          </button>
-        ) : null}
-      </div>
-      <SearchInput
-        value={input}
-        onChange={setInput}
-        placeholder="Search songs, artists…"
-        className="w-full sm:w-96"
-      />
-      {error ? (
-        <Notice tone="warning" title="Song search failed">
-          {error}
-        </Notice>
-      ) : null}
-
-      {/* Selected song card: preview + part selection */}
-      {selected ? (
-        <div className="flex flex-col gap-3 rounded-field border border-separator bg-surface p-3">
-          <div className="flex items-center gap-2.5">
-            {selected.image ? (
-              <img
-                src={selected.image}
-                alt=""
-                className="size-12 flex-none rounded-lg object-cover"
-              />
-            ) : (
-              <span className="grid size-12 flex-none place-items-center rounded-lg bg-surface-muted text-faint-foreground">
-                <Music2 className="size-5" />
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {selected.title}
-              </p>
-              <p className="truncate text-xs text-muted">{selected.artist}</p>
-              <p className="text-[10px] tabular-nums text-faint-foreground">
-                part {formatSeconds(clipStart)} → {formatSeconds(Math.min(clipStart + clipLength, songDuration))}
-                {" · "}length {formatSeconds(selected.duration || 0)}
-              </p>
-            </div>
-            <button
-              type="button"
-              title={previewing ? "Pause preview" : "Play preview"}
-              aria-label={previewing ? "Pause preview" : "Play preview"}
-              onClick={togglePreview}
-              className="grid size-11 flex-none place-items-center rounded-full bg-foreground text-background transition-transform hover:scale-105 active:scale-95"
-            >
-              {previewing ? <Pause className="size-4 fill-current" /> : <Play className="size-4 translate-x-px fill-current" />}
-            </button>
-          </div>
-
-          {/* Preview progress + part selection */}
-          <input
-            type="range"
-            min={0}
-            max={Math.max(previewDuration || songDuration, 1)}
-            step={0.5}
-            value={previewTime}
-            aria-label="Preview position"
-            onChange={(event) => {
-              const audio = previewRef.current;
-              const next = Number(event.target.value);
-              if (audio) {
-                audio.currentTime = next;
-                setPreviewTime(next);
-              }
-            }}
-            className="h-1.5 min-w-0 w-full cursor-pointer rounded-full"
-            style={{ accentColor: "var(--accent)" }}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] tabular-nums text-muted-foreground">
-              {formatSeconds(previewTime)} / {formatSeconds(previewDuration || songDuration)}
-            </span>
-            <label className="flex items-center gap-1.5 text-xs text-muted">
-              Start part at
-              <input
-                type="number"
-                min={0}
-                max={Math.max(0, songDuration - clipLength)}
-                step={1}
-                value={clipStart}
-                onChange={(event) =>
-                  onClipStart(
-                    Math.max(0, Math.min(Number(event.target.value), Math.max(0, songDuration - clipLength)))
-                  )
-                }
-                className="w-20 rounded-md border border-separator bg-surface px-2 py-1 text-xs tabular-nums text-foreground"
-              />
-              <span className="text-[11px] text-faint-foreground">sec</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                const audio = previewRef.current;
-                if (audio) onClipStart(Math.floor(audio.currentTime));
-              }}
-              className="min-h-8 rounded-full border border-separator bg-surface px-2.5 text-[11px] font-semibold text-muted transition-colors hover:text-foreground"
-              title="Set the story's starting point from where the preview is now"
-            >
-              Set from preview ▸
-            </button>
-          </div>
-          {/* preview element */}
-          <audio
-            ref={previewRef}
-            src={selected.streamUrl}
-            preload="metadata"
-            onPlay={() => setPreviewing(true)}
-            onPause={() => setPreviewing(false)}
-            onTimeUpdate={(event) => setPreviewTime(event.currentTarget.currentTime)}
-            onLoadedMetadata={(event) =>
-              setPreviewDuration(
-                Number.isFinite(event.currentTarget.duration) && event.currentTarget.duration
-                  ? event.currentTarget.duration
-                  : 0
-              )
-            }
-          />
-        </div>
-      ) : null}
-
-      {/* Results */}
-      {loading ? (
-        <div className="flex items-center gap-2 py-1 text-xs text-muted">
-          <Spinner className="size-3.5" /> Searching the catalogue…
-        </div>
-      ) : null}
-      {!loading && results.length > 0 && loadedTerm === term ? (
-        <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto rounded-field border border-separator p-1.5 sm:grid-cols-2">
-          {results.map((song) => {
-            const active = song.id === selected?.id;
-            return (
-              <button
-                key={song.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => choose(song)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-field p-2 text-start transition-colors hover:bg-surface-secondary",
-                  active && "bg-accent-soft"
-                )}
-              >
-                {song.image ? (
-                  <img
-                    src={song.image}
-                    alt=""
-                    className="size-9 flex-none rounded-md object-cover"
-                  />
-                ) : (
-                  <span className="grid size-9 flex-none place-items-center rounded-md bg-surface-muted text-faint-foreground">
-                    <Music2 className="size-4" />
-                  </span>
-                )}
-                <span className="min-w-0 flex-1">
-                  <span
-                    className={cn(
-                      "block truncate text-xs font-semibold",
-                      active ? "text-brand" : "text-foreground"
-                    )}
-                  >
-                    {song.title}
-                  </span>
-                  <span className="block truncate text-[11px] text-muted">{song.artist}</span>
-                </span>
-                <span className="flex-none text-[10px] tabular-nums text-muted-foreground">
-                  {song.duration
-                    ? `${Math.floor(song.duration / 60)}:${String(Math.round(song.duration) % 60).padStart(2, "0")}`
-                    : ""}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-      {!results.length && loadedTerm === term && !error ? (
-        <EmptyState
-          icon={<Search className="size-5" />}
-          title="No songs matched"
-          description="Try another phrase — the picker searches the full music catalogue."
-        />
-        ) : null}
-    </div>
-  );
-}

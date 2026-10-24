@@ -5,7 +5,6 @@ import { sales } from "./sales";
 import { expenses } from "./expenses";
 import { products } from "./products";
 import { tools } from "./tools";
-import { developer } from "./developer";
 import { settings } from "./settings";
 
 /**
@@ -23,10 +22,9 @@ export const en = {
   ...expenses,
   ...products,
   ...tools,
-  ...developer,
   ...settings,
 };
 
 export type MessageKey = keyof typeof en;
 
-export { shell, common, dashboard, sales, expenses, products, tools, developer, settings };
+export { shell, common, dashboard, sales, expenses, products, tools, settings };

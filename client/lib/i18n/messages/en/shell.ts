@@ -16,7 +16,6 @@ export const shell = {
   "Overview": "Overview",
   "Operations": "Operations",
   "Tools": "Tools",
-  "Advanced": "Advanced",
   "Dashboard": "Dashboard",
   "Reports": "Reports",
   "Sales": "Sales",
@@ -26,7 +25,6 @@ export const shell = {
   "Database": "Database",
   "Server": "Server",
   "Settings": "Settings",
-  "Developer": "Developer",
   "Key numbers and trends": "Key numbers and trends",
   "Deeper analytics and charts": "Deeper analytics and charts",
   "Bills and custom orders": "Bills and custom orders",
@@ -36,7 +34,6 @@ export const shell = {
   "Read-only collection browser": "Read-only collection browser",
   "Backend health and endpoints": "Backend health and endpoints",
   "Shop profile and invoice": "Shop profile and invoice",
-  "Edit and ship the codebase": "Edit and ship the codebase",
 
   /* Topbar and sidebar */
   "Open navigation": "Open navigation",

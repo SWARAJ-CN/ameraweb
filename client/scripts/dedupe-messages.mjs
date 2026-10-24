@@ -27,7 +27,6 @@ const DOMAINS = [
   "expenses",
   "products",
   "tools",
-  "developer",
   "settings",
 ];
 

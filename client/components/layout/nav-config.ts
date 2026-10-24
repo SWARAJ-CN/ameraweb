@@ -1,12 +1,9 @@
 import {
   Calculator,
-  Code2,
   Database,
   Image,
   LayoutDashboard,
-  Music,
   Package,
-  Server,
   Settings,
   ShoppingBag,
   TrendingUp,
@@ -71,12 +68,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Tools",
     items: [
       {
-        href: "/music",
-        label: "Music",
-        icon: Music,
-        description: "Listen while you work",
-      },
-      {
         href: "/public-apis",
         label: "Tools",
         icon: Image,
@@ -95,27 +86,10 @@ export const NAV_GROUPS: NavGroup[] = [
         description: "Read-only collection browser",
       },
       {
-        href: "/server",
-        label: "Server",
-        icon: Server,
-        description: "Backend health and endpoints",
-      },
-      {
         href: "/settings",
         label: "Settings",
         icon: Settings,
         description: "Shop profile and invoice",
-      },
-    ],
-  },
-  {
-    title: "Advanced",
-    items: [
-      {
-        href: "/developer",
-        label: "Developer",
-        icon: Code2,
-        description: "Edit and ship the codebase",
       },
     ],
   },

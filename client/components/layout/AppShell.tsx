@@ -3,11 +3,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useMusicPlayer } from "@/components/providers/MusicPlayerProvider";
 import { titleForPath } from "./nav-config";
 import { Sidebar } from "./Sidebar";
 import { Splash } from "./Splash";
-import { StickyPlayerBar } from "@/components/features/music/StickyPlayerBar";
 import { Topbar } from "./Topbar";
 import { cn } from "@/lib/cn";
 
@@ -15,7 +13,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { ready, user } = useAuth();
-  const { current: nowPlaying } = useMusicPlayer();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -63,8 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div
             key={pathname}
             className={cn(
-              "animate-rise mx-auto flex w-full max-w-[100rem] flex-col gap-5",
-              nowPlaying && "pb-32"
+              "animate-rise mx-auto flex w-full max-w-[100rem] flex-col gap-5"
             )}
           >
             {children}
@@ -76,8 +72,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </p>
         </footer>
       </div>
-      {/* Persistent listening bar — survives tab switches and background play. */}
-      <StickyPlayerBar />
     </div>
   );
 }

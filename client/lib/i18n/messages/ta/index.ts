@@ -5,7 +5,6 @@ import { sales } from "./sales";
 import { expenses } from "./expenses";
 import { products } from "./products";
 import { tools } from "./tools";
-import { developer } from "./developer";
 import { settings } from "./settings";
 import type { en } from "../en";
 
@@ -23,7 +22,6 @@ export const ta: Record<keyof typeof en, string> = {
   ...expenses,
   ...products,
   ...tools,
-  ...developer,
   ...settings,
 };
 
@@ -34,5 +32,4 @@ export { sales };
 export { expenses };
 export { products };
 export { tools };
-export { developer };
 export { settings };

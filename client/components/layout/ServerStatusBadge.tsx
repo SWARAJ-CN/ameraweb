@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Chip } from "@heroui/react";
 import { useServerStatus } from "@/components/providers/ServerStatusProvider";
 import { cn } from "@/lib/cn";
@@ -34,8 +33,8 @@ export function ServerStatusBadge({ className }: { className?: string }) {
       : "Checking server…";
 
   return (
-    <Link
-      href="/server"
+    <span
+      role="status"
       title={title}
       aria-label={title}
       className={cn("inline-flex flex-none items-center", className)}
@@ -56,6 +55,6 @@ export function ServerStatusBadge({ className }: { className?: string }) {
           ) : null}
         </Chip.Label>
       </Chip>
-    </Link>
+    </span>
   );
 }

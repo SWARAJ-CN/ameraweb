@@ -52,9 +52,7 @@ const NAV_ALIASES: Record<string, string[]> = {
   "/products": ["product", "items", "catalogue", "stock", "inventory"],
   "/calculations": ["calculations", "calculation", "pricing", "quotes"],
   "/database": ["db", "data", "collections", "records"],
-  "/server": ["backend", "status", "endpoints", "uptime", "server status"],
   "/settings": ["setting", "preferences", "profile", "invoice settings"],
-  "/developer": ["dev", "code", "codebase", "git", "repo", "repository"],
 };
 
 /**
@@ -229,8 +227,8 @@ function allowWithin(a: string, b: string): number {
  *
  * `anywhere` is true when the sentence opens with a verb, which lets the phrase
  * sit anywhere in it. Without that, the utterance has to be the phrase and
- * nothing else — otherwise "what is the status" would match Server, and every
- * stray word would switch pages.
+ * nothing else — otherwise "what is the status" would match a page name, and
+ * every stray word would switch pages.
  */
 function fuzzyScore(phrase: string[], words: string[], anywhere: boolean): number {
   if (words.length === 0 || phrase.length === 0) return 0;
