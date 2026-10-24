@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import { ServerStatusBadge } from "./ServerStatusBadge";
-import { VoiceCommand } from "./VoiceCommand";
 
 interface TopbarProps {
   title: string;
@@ -63,7 +62,6 @@ export function Topbar({ title, description, onOpenMenu }: TopbarProps) {
         >
           <RefreshCw className={cn("size-4", refreshing && "animate-spin")} />
         </Button>
-        <VoiceCommand />
         <div className="hidden sm:block">
           <ThemeToggle />
         </div>

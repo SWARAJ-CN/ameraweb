@@ -4,7 +4,6 @@ import { Globe } from "lucide-react";
 import { Dropdown } from "@heroui/react";
 import { useI18n } from "@/components/providers/I18nProvider";
 import { LOCALES } from "@/lib/i18n/locales";
-import { announce } from "@/lib/announcer";
 import { cn } from "@/lib/cn";
 
 /**
@@ -20,8 +19,6 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const choose = (code: string) => {
     if (code === locale) return;
     setLocale(code);
-    const next = LOCALES.find((entry) => entry.code === code);
-    announce(t("Language changed to {language}.", { language: next?.nativeName ?? code }));
   };
 
   return (

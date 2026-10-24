@@ -19,7 +19,7 @@ export interface LocaleInfo {
   curated: boolean;
   /** Locale used for dates, numbers and text direction. */
   intl: string;
-  /** Accent the speech recogniser and synthesiser are pointed at. */
+  /** BCP-47 tag used when translating content into this language. */
   speech: string;
   /** Text direction. */
   dir: "ltr" | "rtl";
